@@ -3,3 +3,5 @@ __pycache__/
 .work/
 *.ai.json
 frames/
+
+dist/

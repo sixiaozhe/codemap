@@ -1,0 +1,26 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build toolkit tarball
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          [ "$VER" = "workflow_dispatch" ] && VER="dev"
+          sh scripts/package.sh "$VER"
+      - name: Upload release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/codemap-toolkit-*.tar.gz
+          generate_release_notes: true

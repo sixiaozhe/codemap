@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="88" viewBox="0 0 360 88" role="img" aria-label="codemap">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4daafc"/>
+      <stop offset="1" stop-color="#4ec9b0"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="12" width="64" height="64" rx="14" fill="#181818" stroke="#2b2b2b"/>
+  <g stroke="url(#g)" stroke-width="2.4" fill="none" stroke-linecap="round">
+    <path d="M22 46 L40 28 L58 46"/>
+    <path d="M40 28 L40 58"/>
+    <path d="M22 46 L58 46"/>
+  </g>
+  <g fill="#4daafc">
+    <circle cx="40" cy="28" r="4.6"/>
+  </g>
+  <circle cx="22" cy="46" r="4.6" fill="#4ec9b0"/>
+  <circle cx="58" cy="46" r="4.6" fill="#c586c0"/>
+  <circle cx="40" cy="58" r="4.6" fill="#e06c9f"/>
+  <text x="88" y="44" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif"
+        font-size="30" font-weight="700" fill="#d4d4d4">codemap</text>
+  <text x="89" y="64" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif"
+        font-size="12" fill="#9d9d9d">C/C++ code map · offline · AI-friendly</text>
+</svg>

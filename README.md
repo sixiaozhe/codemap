@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/logo.svg" width="360" alt="codemap">
+
 # codemap · C/C++ 代码地图
 
 **离线、零依赖，一图看懂 C/C++ 工程的结构与质量。**
@@ -13,6 +15,7 @@
 ![python](https://img.shields.io/badge/python-3.6%2B-3572a5)
 ![offline](https://img.shields.io/badge/network-not%20required-4ec9b0)
 ![license](https://img.shields.io/badge/license-MIT-4daafc)
+[![release](https://github.com/sixiaozhe/codemap/actions/workflows/release.yml/badge.svg)](https://github.com/sixiaozhe/codemap/actions/workflows/release.yml)
 
 </div>
 
@@ -47,6 +50,20 @@
 ### 调用图（游走高亮来源路径、调用环同色、连线绕行）
 
 ![调用图](docs/callgraph.gif)
+
+### 依赖矩阵（拓扑序、上三角标红=循环依赖、鼠标十字高亮）
+
+![依赖矩阵](docs/matrix.gif)
+
+### 命令行按需查询（省 token、省交互）
+
+![CLI 查询](docs/cli.gif)
+
+### 整洁度（维护性指数 MI / 嵌套深度 / 重复块 / 卫生检查）
+
+![整洁度](docs/cleanliness.png)
+
+> 以上动图均由**真实工具输出**（Lua 5.4 工程）录制，非示意图。
 
 ## 🚀 快速开始
 
@@ -135,6 +152,18 @@ codemap/
 ├── docs/                 # README 用的动图
 ├── install.sh
 └── uninstall.sh
+```
+
+## 📦 打包与发布
+
+```bash
+sh scripts/package.sh 7.1.0          # -> dist/codemap-toolkit-7.1.0.tar.gz
+```
+
+打 `v*` 标签会触发 GitHub Actions（`.github/workflows/release.yml`）自动打包并创建 Release：
+
+```bash
+git tag v7.1.0 && git push origin v7.1.0
 ```
 
 ## ⚠️ 已知限制
