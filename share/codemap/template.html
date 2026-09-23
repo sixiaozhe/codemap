@@ -1,0 +1,1482 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>代码地图 · __PROJECT__</title>
+<style>
+:root{
+  --bg:#1f1f1f; --panel:#181818; --panel2:#252526; --line:#2b2b2b;
+  --fg:#cccccc; --dim:#9d9d9d; --acc:#4daafc; --good:#4ec9b0;
+  --warn:#cca700; --bad:#f85149; --purple:#c586c0;
+  --sel:#04395e; --focus:#0078d4;
+  --viz-h:clamp(420px,72vh,760px);   /* 大可视化区高度 */
+  --side:300px;                      /* 右侧详情栏宽度 */
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
+  font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+body{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+a{color:var(--acc)}
+header{padding:10px 18px;border-bottom:1px solid #2b2b2b;display:flex;
+  align-items:center;gap:16px;flex-wrap:wrap;background:#181818;flex:0 0 auto}
+header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.3px}
+header .meta{color:var(--dim);font-size:12px}
+header .meta b{color:var(--fg);font-weight:600}
+.layout{flex:1 1 auto;display:flex;min-height:0}
+nav.tabs{flex:0 0 auto;display:flex;flex-direction:column;gap:0;width:190px;
+  padding:8px 0;background:#181818;border-right:1px solid #2b2b2b;
+  overflow-y:auto;overflow-x:hidden;transition:width .16s ease}
+nav.tabs.collapsed{width:56px}
+nav.tabs button{display:flex;align-items:center;gap:10px;width:100%;height:40px;
+  margin:2px 0;text-align:left;background:none;border:0;border-left:2px solid transparent;
+  color:#cccccc;padding:0 10px 0 12px;cursor:pointer;font-size:13px;
+  font-family:inherit;white-space:nowrap;overflow:hidden}
+nav.tabs button:hover{color:#ffffff;background:#2a2d2e}
+nav.tabs button.active{color:#ffffff;background:#04395e;border-left-color:#0078d4}
+nav.tabs button svg{flex:0 0 auto;width:18px;height:18px}
+nav.tabs .lbl{transition:opacity .12s}
+nav.tabs.collapsed .lbl{display:none}
+nav.tabs.collapsed button{width:40px;height:40px;padding:0;margin:2px auto;justify-content:center;border-left-color:transparent;border-radius:6px}
+nav.tabs.collapsed button.active{border-left-color:#0078d4}
+.nav-head{display:flex;justify-content:flex-start;padding:2px 0 8px 5px}
+#navToggle{display:flex;align-items:center;justify-content:center;background:none;border:0;
+  color:#cccccc;cursor:pointer;width:34px;height:34px;padding:0;border-radius:4px}
+#navToggle:hover{color:#ffffff;background:#2a2d2e}
+#navToggle svg{width:18px;height:18px}
+main{flex:1 1 auto;min-width:0;overflow-y:auto;padding:18px 20px 60px}
+section.tab{display:none}
+section.tab.active{display:block}
+h2{font-size:14px;font-weight:600;margin:0 0 12px;color:var(--fg)}
+h2 .sub{color:var(--dim);font-weight:400;font-size:12px;margin-left:8px}
+.panel{background:var(--panel);border-radius:6px;padding:16px;margin-bottom:16px}
+.grid{display:grid;gap:14px}
+.kpig{background:transparent;padding:0;margin-bottom:10px}
+.kpig h2{margin:2px 0 8px;font-size:12px;font-weight:600;color:var(--dim)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.kpi .v{font-size:23px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{color:var(--dim);font-size:12px;margin-top:4px}
+.kpi.good .v{color:var(--good)} .kpi.warn .v{color:var(--warn)} .kpi.bad .v{color:var(--bad)}
+.two{grid-template-columns:1fr 1fr}
+@media(max-width:1000px){.two{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--dim);font-weight:600;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--panel)}
+th:hover{color:var(--fg)}
+tr:hover td{background:#2a2d2e}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:4px;background:#313131;overflow:hidden;min-width:40px}
+.bar>i{display:block;height:100%;border-radius:4px}
+.tag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;border:1px solid var(--line)}
+.tag.cyc{color:var(--warn);border-color:#6b5a1a;background:#332b0d}
+.tag.hot{color:var(--bad);border-color:#6b2a2a;background:#331a1a}
+.tag.ok{color:var(--good);border-color:#2a4d2b;background:#1a2e1a}
+.btn{background:#313131;border:1px solid #3c3c3c;color:#cccccc;border-radius:2px;
+  padding:5px 11px;cursor:pointer;font-size:12px}
+.btn:hover{background:#3c3c3c;border-color:#3c3c3c;color:#ffffff}
+.btn.on{background:#0078d4;border-color:#0078d4;color:#ffffff}
+input,select{background:#313131;border:1px solid #3c3c3c;color:#cccccc;
+  border-radius:2px;padding:5px 8px;font-size:12px;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:#0078d4}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.scroll{overflow:auto;max-height:max(240px,calc(100vh - 200px))}
+.gauge{display:flex;align-items:center;gap:20px}
+.gauge .ring{position:relative;width:130px;height:130px;flex:0 0 auto}
+.gauge .ring .val{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center}
+.gauge .ring .val b{font-size:34px;font-weight:700}
+.gauge .ring .val span{font-size:11px;color:var(--dim)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--dim);font-size:11px;margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.mtx{display:grid;gap:1px;width:max-content}
+.mtx .corner{position:sticky;left:0;top:0;z-index:3;background:var(--panel)}
+.mtx .ch{writing-mode:vertical-rl;transform:rotate(180deg);color:var(--dim);
+  display:flex;align-items:flex-end;justify-content:center;overflow:hidden;
+  white-space:nowrap;font-size:9.5px;position:sticky;top:0;z-index:2;background:var(--panel)}
+.mtx .rh{display:flex;align-items:center;justify-content:flex-end;padding-right:5px;
+  color:var(--dim);overflow:hidden;white-space:nowrap;font-size:10px;
+  position:sticky;left:0;z-index:1;background:var(--panel)}
+.mtx .cell{display:flex;align-items:center;justify-content:center;cursor:pointer;
+  border-radius:2px;overflow:hidden;font-size:9px;letter-spacing:-.3px;color:var(--fg);
+  font-variant-numeric:tabular-nums}
+.mtx .cell.h{background:#1f1f1f;cursor:default}
+.mtx .cell:hover{outline:2px solid var(--acc);outline-offset:-2px;position:relative;z-index:4}
+.pano{background:#1f1f1f;border:1px solid var(--line);border-radius:6px;width:100%;display:block;height:var(--viz-h);cursor:grab}
+.cgwrap{overflow:hidden;border:1px solid var(--line);border-radius:6px;background:#1f1f1f;height:var(--viz-h)}
+#cg{display:block;width:100%;height:100%;background:#1f1f1f;cursor:grab}
+#cg.drag{cursor:grabbing}
+.edge.spawn{stroke:var(--warn);stroke-dasharray:5 3}
+.edge.hl{stroke:var(--acc);stroke-width:2.4}
+.edge.cyc{stroke:var(--warn);stroke-width:2.2}
+.cglegend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;color:var(--dim);font-size:11px;margin:-2px 0 10px}
+.cglegend span{display:inline-flex;align-items:center;gap:5px}
+.cglegend .sw{display:inline-block;width:16px;height:11px;border-radius:2px;border:1.5px solid var(--line)}
+.pchip{padding:1px 7px;border:1px solid var(--line);border-radius:3px;cursor:pointer;background:#252526}
+.pchip:hover{border-color:var(--acc);color:var(--acc)}
+.pchip.cur{border-color:var(--acc);color:var(--acc)}
+#depthTable tr.sel td{background:#04395e}
+.fnlink{color:var(--acc)}
+.fnlink:hover{text-decoration:underline}
+.chain .card.mid{box-shadow:0 0 0 1px var(--acc)}
+.node rect{fill:#252526;stroke-width:1.4}
+.node text{fill:var(--fg);font-size:10.5px;pointer-events:none}
+.node .ccn{font-size:9.5px;font-weight:700}
+.node{cursor:pointer}
+.edge{fill:none;stroke:#5a5a5a;stroke-width:1.1}
+.edge.hl{stroke:var(--acc);stroke-width:2}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 13px;display:inline-block}
+.chain{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.chain .arrow{color:var(--dim);padding:0 8px}
+.cycblock{border-left:2px solid var(--warn);padding:6px 0 6px 10px;margin:8px 0}
+.cycblock .pchip{margin:2px 4px 2px 0;display:inline-block;font-size:11px}
+.depthside{min-height:180px;border-left:1px solid var(--line);padding-left:16px}
+.depthrow{display:grid;grid-template-columns:minmax(340px,1fr) minmax(0,1.35fr);gap:16px;align-items:start}
+@media(max-width:1000px){.depthrow{grid-template-columns:1fr}.depthside{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:12px}}
+.small{color:var(--dim);font-size:11.5px}
+.warnlist li{margin:4px 0}
+code{background:#252526;border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:11px}
+*::-webkit-scrollbar{width:12px;height:12px}
+*::-webkit-scrollbar-thumb{background:#424242;border-radius:6px;border:3px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-thumb:hover{background:#4f4f4f;background-clip:content-box}
+*::-webkit-scrollbar-corner{background:transparent}
+:focus-visible{outline:1px solid #0078d4;outline-offset:1px}
+.dash{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1100px){.dash{grid-template-columns:1fr}}
+.mtx .cell.hlx{box-shadow:inset 0 0 0 1.5px #4daafc}
+.mtx .rh.hlx,.mtx .ch.hlx{color:#4daafc}
+@keyframes fadenum{from{opacity:0}to{opacity:1}}
+section.tab.active{animation:fadenum .12s ease}
+
+.tag.hot::before{content:'▲ '}
+.tag.cyc::before{content:'⟳ '}
+.mtip{position:fixed;pointer-events:none;background:#202020;border:1px solid #2b2b2b;border-radius:4px;padding:3px 7px;font-size:11px;z-index:50;white-space:nowrap}
+.edge.heur{stroke-dasharray:2 3}
+.hctl{margin-left:auto;display:flex;align-items:center;gap:10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;display:flex;align-items:center;justify-content:center}
+.modal[hidden]{display:none}
+.modal-box{background:#202020;border:1px solid #2b2b2b;border-radius:6px;padding:18px 22px;max-width:680px;max-height:80vh;overflow:auto}
+.modal-box h2{margin-top:0}
+@media(max-width:820px){nav.tabs{width:56px}nav.tabs .lbl{display:none}nav.tabs button{width:40px;height:40px;padding:0;margin:2px auto;justify-content:center}}
+.mtx .ch{font-size:10px}.mtx .rh{font-size:10.5px}.mtx .cell{font-size:10px}
+.node text{font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <h1>代码地图 · <span style="color:var(--acc)">__PROJECT__</span></h1>
+  <div class="meta">指标 <b>lizard __LIZARD__</b> · 调用关系 <b>cscope __CSCOPE__</b>
+    · 函数 <b>__NFUNC__</b> · 模块 <b>__NFILE__</b> · 调用边 <b>__NEDGE__</b>
+    · <span class="small">已排除测试/合并文件</span></div>
+  <div class="hctl">
+    <label class="small">CCN 阈值 <input id="thresh" type="number" min="1" max="200" value="15" style="width:66px"></label>
+    <button class="btn" id="helpBtn" title="图例与口径说明">?</button>
+  </div>
+</header>
+<div class="layout">
+<nav class="tabs" id="sideNav" role="tablist" aria-label="页面导航">
+  <div class="nav-head"><button id="navToggle" title="收起 / 展开"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button></div>
+  <button data-tab="overview" role="tab" aria-selected="true" class="active" title="总览"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span class="lbl">总览</span></button>
+  <button data-tab="matrix" role="tab" aria-selected="false" title="依赖矩阵"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg><span class="lbl">依赖矩阵</span></button>
+  <button data-tab="panorama" role="tab" aria-selected="false" title="接口全景"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg><span class="lbl">接口全景</span></button>
+  <button data-tab="callgraph" role="tab" aria-selected="false" title="调用图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="lbl">调用图</span></button>
+  <button data-tab="complexity" role="tab" aria-selected="false" title="复杂度"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span class="lbl">复杂度</span></button>
+  <button data-tab="depth" role="tab" aria-selected="false" title="调用深度"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="lbl">调用深度</span></button>
+  <button data-tab="cleanliness" role="tab" aria-selected="false" title="整洁度"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span class="lbl">整洁度</span></button>
+  <button data-tab="health" role="tab" aria-selected="false" title="健康度"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span class="lbl">健康度</span></button>
+</nav>
+<main>
+  <section id="tab-overview" role="tabpanel" class="tab active"></section>
+  <section id="tab-matrix" role="tabpanel" class="tab"></section>
+  <section id="tab-panorama" role="tabpanel" class="tab"></section>
+  <section id="tab-callgraph" role="tabpanel" class="tab"></section>
+  <section id="tab-complexity" role="tabpanel" class="tab"></section>
+  <section id="tab-depth" role="tabpanel" class="tab"></section>
+  <section id="tab-health" role="tabpanel" class="tab"></section>
+  <section id="tab-cleanliness" role="tabpanel" class="tab"></section>
+</main>
+</div>
+<div id="help" class="modal" hidden><div class="modal-box">
+  <h2>图例与口径</h2>
+  <table><tbody>
+  <tr><td>CCN</td><td>圈复杂度 = 1 + 判定点数；顶部可调"热点阈值"，联动配色与健康分</td></tr>
+  <tr><td>扇入/扇出</td><td>被多少函数调用 / 调用了多少函数；括号内为 <b>同文件/跨文件</b></td></tr>
+  <tr><td>深度 / 子树深度</td><td>到入口的层数 / 到叶子的层数（按强连通分量缩点，环内算一层）</td></tr>
+  <tr><td>对外接口</td><td>被其他模块调用的函数</td></tr>
+  <tr><td>内部接口(泄漏)</td><td>非 static、却只在本模块内被调用（建议收敛为 static）</td></tr>
+  <tr><td>不稳定性 I</td><td>Ce/(Ca+Ce)：0=稳定(被依赖)，1=不稳定(依赖他人)</td></tr>
+  <tr><td>橙虚线</td><td>线程/回调等函数指针启动的调用</td></tr>
+  <tr><td>短虚线</td><td>仅内置词法解析发现的调用（cscope 未见，启发式）</td></tr>
+  <tr><td>洋红连线</td><td>模块间<b>双向依赖</b>（接口全景）</td></tr>
+  <tr><td>环 ⟳</td><td><b>调用环</b>：有向调用图里的强连通分量(SCC)。调用图中<b>同色边框</b>=同一环，<b>橙色加粗边</b>=环内调用，选中环内函数时整环高亮</td></tr>
+  <tr><td>上三角红框</td><td>拓扑序下的反向调用（循环依赖）</td></tr>
+  <tr><td>数据来源</td><td>cscope + 内置词法解析 + 线程/回调匹配，三路合并；外部符号不计</td></tr>
+  <tr><td>MI</td><td><b>维护性指数</b>：由 Halstead 体积、CCN、NLOC 算出；<65 差 / 65-85 中 / ≥85 好</td></tr>
+  <tr><td>嵌套深度</td><td>函数内控制结构的最大嵌套层数，>4 提示</td></tr>
+  <tr><td>重复率</td><td>lizard 检测的重复代码占比；重复块列为相互重复的区间</td></tr>
+  <tr><td>快捷键</td><td>1–7 切页签，/ 聚焦搜索，Esc 关闭本弹层</td></tr>
+  </tbody></table>
+  <div style="margin-top:12px;text-align:right"><button class="btn" onclick="document.getElementById('help').hidden=true">关闭</button></div>
+</div></div>
+<script>
+const DATA = __DATA_JSON__;
+const F = DATA.functions, FILES = DATA.files, E = DATA.edges;
+const N = F.length, M = FILES.length;
+const H = DATA.health, LP = DATA.longest_path, LPS = DATA.longest_scc_sizes;
+let ccnThresh=15;                        // CCN 热点阈值(可调)
+const isHot=id=>F[id][4]>ccnThresh;
+let showHeur=true;                       // 是否显示"仅内置解析"的启发式边
+const HEUR=new Set();
+(DATA.heur_edges||[]).forEach(e=>HEUR.add(e[0]+'_'+e[1]));
+const isHeur=(a,b)=>HEUR.has(a+'_'+b);
+let hWeights=[25,20,15,15,15,10];        // 健康度各项权重(可调)
+let currentTab='overview';
+const fName=i=>F[i][2], fFile=i=>F[i][1], fCcn=i=>F[i][4], fDepth=i=>F[i][13];
+const adj=Array.from({length:N},()=>[]), radj=Array.from({length:N},()=>[]);
+for(const [a,b] of E){adj[a].push(b);radj[b].push(a);}
+const CYC_SCC=new Set(),CYC_ORDER=[];
+(DATA.cycles||[]).forEach(c=>c.forEach(id=>{const sc=F[id][16];if(!CYC_SCC.has(sc)){CYC_SCC.add(sc);CYC_ORDER.push(sc);}}));
+const CYC_COLORS=['#cca700','#e06c9f','#4ec9b0','#c586c0','#dcdcaa','#7ee787','#79c0ff','#ce9178','#d16d9e','#56b6c2'];
+function cycColorOf(sc){return CYC_COLORS[CYC_ORDER.indexOf(sc)%CYC_COLORS.length];}
+let showCyc=true;
+const SPAWN=new Map();
+(DATA.spawn_edges||[]).forEach(e=>SPAWN.set(e[0]+'_'+e[1],e[2]));
+const isSpawn=(a,b)=>SPAWN.has(a+'_'+b);
+let showSpawn=true;
+let maxCcn=1; for(const f of F) if(f[4]>maxCcn) maxCcn=f[4];
+// 稀疏矩阵: 只存非零模块对, 避免大工程下 MxM 密集数据撑爆 HTML
+const CALL_LINKS=DATA.call_links||[], INC_LINKS=DATA.include_links||[];
+const CALL_MAP={},INC_MAP={};
+for(const l of CALL_LINKS)CALL_MAP[l[0]+'_'+l[1]]=l[2];
+for(const l of INC_LINKS)INC_MAP[l[0]+'_'+l[1]]=l[2];
+let maxEdge=1;for(const l of CALL_LINKS)if(l[2]>maxEdge)maxEdge=l[2];
+let maxInc=1;for(const l of INC_LINKS)if(l[2]>maxInc)maxInc=l[2];
+function matLinks(mode){return mode==='call'?CALL_LINKS:INC_LINKS;}
+function matGet(mode,i,j){return (mode==='call'?CALL_MAP:INC_MAP)[i+'_'+j]||0;}
+const MAT_GRID_MAX=150, PANO_MAX=300;   // 超过则降级/限流
+
+/* ---- 工具函数 ---- */
+function h(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;
+  if(html!=null)e.innerHTML=html;return e;}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function ccnColor(c){return c>ccnThresh*2?'var(--bad)':c>ccnThresh?'var(--warn)':c>ccnThresh/2?'#4daafc':'var(--good)';}
+const FILE_COLORS=['#569cd6','#4ec9b0','#c586c0','#9cdcfe','#d16d9e','#7ee787','#79c0ff','#ce9178','#b392f0','#56b6c2'];
+function fileColor(i){return FILE_COLORS[i%FILE_COLORS.length];}
+function bar(v,max,color){return `<div class="bar"><i style="width:${Math.min(100,100*v/max)}%;background:${color||'var(--acc)'}"></i></div>`;}
+function pct(v,max){return Math.min(100,100*v/max);}
+function fmt(n){return (typeof n==='number'&&isFinite(n))?n.toLocaleString('en-US'):n;}
+// 扇入/扇出: 总数 + (同文件/跨文件)
+function fanCell(v,i,e){return `${v} <span class="small">(${i}/${e})</span>`;}
+function fq(i){return fName(i)+' <span class="small">@'+esc(FILES[fFile(i)].label)+':'+F[i][9]+'</span>';}
+/* ---- 导出 / 健康度重算 / 状态记忆 ---- */
+function download(name,text){
+  const blob=new Blob([text],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>{try{URL.revokeObjectURL(a.href);}catch(e){}},1000);
+}
+function csvCell(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function toCSV(rows){return rows.map(r=>r.map(csvCell).join(',')).join('\n');}
+function healthNow(){
+  const n=Math.max(1,F.length),clamp=x=>Math.max(0,Math.min(1,x));
+  let hotspots=0;for(const f of F)if(f[4]>ccnThresh)hotspots++;
+  const items=[
+    ['平均复杂度',H.avg_ccn/15,hWeights[0],'avgCCN '+H.avg_ccn],
+    ['最高复杂度',H.max_ccn/50,hWeights[1],'maxCCN '+H.max_ccn],
+    ['调用环',H.cycle_funcs/n*5,hWeights[2],H.cycle_funcs+' 函数在环中'],
+    ['平均扇出',H.avg_fanout/10,hWeights[3],'fanout '+H.avg_fanout],
+    ['调用深度',H.deepest/20,hWeights[4],'深度 '+H.deepest],
+    ['热点占比',hotspots/n*3,hWeights[5],hotspots+' 个 >'+ccnThresh],
+  ];
+  let score=100;const rows=items.map(([nm,r,w,label])=>{const lost=clamp(r)*w;score-=lost;
+    return [nm,Math.min(1,r),w,label,lost];});
+  return {score:Math.round(Math.max(0,score)*10)/10,rows,hotspots};
+}
+function saveState(){try{localStorage.setItem('cm_state',JSON.stringify(
+  {tab:currentTab,ccnThresh,cgHops,showSpawn,showHeur,keepPos,showCyc,matrixMode,matrixOrderMode,weights:hWeights}));}catch(e){}}
+function loadState(){try{return JSON.parse(localStorage.getItem('cm_state')||'{}');}catch(e){return {};}}
+function refreshActive(){
+  const sec=document.getElementById('tab-'+currentTab);
+  if(sec&&rendered[currentTab]){sec.innerHTML='';RENDER[currentTab]();}
+}
+
+/* ---- Tab 切换 ---- */
+const rendered={};
+document.querySelectorAll('nav.tabs button[data-tab]').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('nav.tabs button[data-tab]').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-selected','false');});
+    document.querySelectorAll('section.tab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');b.setAttribute('aria-selected','true');
+    document.getElementById('tab-'+b.dataset.tab).classList.add('active');
+    currentTab=b.dataset.tab;saveState();
+    if(!rendered[b.dataset.tab]){rendered[b.dataset.tab]=1;RENDER[b.dataset.tab]();}
+  };
+});
+// 侧边栏收起/展开(记忆状态)
+(function(){
+  const nav=document.getElementById('sideNav'), tog=document.getElementById('navToggle');
+  if(!nav||!tog)return;
+  const set=c=>{nav.classList.toggle('collapsed',c);tog.title=c?'展开侧栏':'收起侧栏';
+    try{localStorage.setItem('cm_nav_collapsed',c?'1':'0');}catch(e){}};
+  tog.onclick=()=>set(!nav.classList.contains('collapsed'));
+  let init=false;
+  try{init=localStorage.getItem('cm_nav_collapsed')==='1';}catch(e){}
+  set(init);
+})();
+
+/* ================= 总览 ================= */
+function renderOverview(){
+  const s=document.getElementById('tab-overview');
+  const hn=healthNow();
+  const dash=h('div','dash'), left=h('div');
+  const groups=[
+    ['规模',[
+      ['函数总数',H.functions,''],['模块数',H.files,''],
+      ['代码行(NLOC)',H.nloc,''],['调用边',H.edges,'']]],
+    ['复杂度',[
+      ['平均 CCN',H.avg_ccn,''],['最高 CCN',H.max_ccn,'bad'],
+      ['复杂函数(>'+ccnThresh+')',hn.hotspots,'warn'],['最大调用深度',H.deepest,'']]],
+    ['耦合与调用',[
+      ['调用环',H.cycles,'warn'],['线程/回调边',H.spawn_edges||0,'warn'],
+      ['模块间调用占比',(H.edges?Math.round(100*(H.inter_edges||0)/H.edges):0)+'%',''],
+      ['入口函数(扇入=0)',(DATA.roots||[]).length,'']]],
+  ];
+  groups.forEach(([title,cards])=>{
+    const gp=h('div','panel kpig');
+    gp.innerHTML=`<h2>${title}</h2><div class="kpis">`+
+      cards.map(k=>`<div class="kpi ${k[2]}"><div class="v">${fmt(k[1])}</div><div class="l">${k[0]}</div></div>`).join('')+
+      '</div>';
+    left.appendChild(gp);
+  });
+  dash.appendChild(left);
+
+  const g=h('div','panel');
+  const col=hn.score>=75?'var(--good)':hn.score>=55?'var(--warn)':'var(--bad)';
+  g.innerHTML=`<h2>健康度总评 <span class="sub">0-100，越高越健康（权重可在"健康度"页调整）</span></h2>
+    <div class="gauge"><div class="ring">
+      <svg viewBox="0 0 120 120" width="130" height="130">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#2b2b2b" stroke-width="11"/>
+        <circle cx="60" cy="60" r="52" fill="none" stroke="${col}" stroke-width="11"
+          stroke-linecap="round" stroke-dasharray="${2*Math.PI*52}" 
+          stroke-dashoffset="${2*Math.PI*52*(1-hn.score/100)}" transform="rotate(-90 60 60)"/>
+      </svg><div class="val"><b style="color:${col}">${hn.score}</b><span>SCORE</span></div>
+    </div>
+    <div style="flex:1;min-width:260px">
+      ${scoreBreakdown().map(x=>`<div style="display:flex;align-items:center;gap:10px;margin:5px 0">
+        <div style="width:150px" class="small">${x[0]}</div>
+        <div style="flex:1">${bar(x[1],x[2],x[3])}</div>
+        <div class="small num" style="width:120px;text-align:right">${x[4]}</div></div>`).join('')}
+    </div></div>`;
+  dash.appendChild(g);
+  s.appendChild(dash);
+
+  // 最复杂函数
+  const top=[...F].sort((a,b)=>b[4]-a[4]).slice(0,12);
+  const p=h('div','panel');
+  p.innerHTML='<h2>最复杂的函数 <span class="sub">CCN 圈复杂度，点击跳转调用图</span></h2>'+
+   '<table><thead><tr><th>函数</th><th>模块</th><th class="num" title="圈复杂度=1+判定点数">CCN</th><th style="width:220px">相对最高</th>'+
+   '<th class="num" title="非空非注释代码行">NLOC</th><th class="num" title="被调用者数(同文件/跨文件)">扇入(内/外)</th><th class="num" title="调用者数(同文件/跨文件)">扇出(内/外)</th><th>标记</th></tr></thead><tbody>'+
+   top.map(f=>`<tr data-fn="${f[0]}" style="cursor:pointer">
+     <td>${esc(f[2])}</td><td class="small">${esc(FILES[f[1]].label)}</td>
+     <td class="num" style="color:${ccnColor(f[4])};font-weight:700">${f[4]}</td>
+     <td>${bar(f[4],maxCcn,ccnColor(f[4]))}</td>
+     <td class="num">${f[5]}</td><td class="num">${fanCell(f[11],f[20],f[21])}</td><td class="num">${fanCell(f[12],f[22],f[23])}</td>
+     <td>${f[15]?'<span class="tag cyc">环</span>':''}</td></tr>`).join('')+
+   '</tbody></table>';
+  p.querySelectorAll('tr[data-fn]').forEach(tr=>tr.onclick=()=>openInGraph(+tr.dataset.fn));
+  s.appendChild(p);
+
+  // 重点风险(模块一览已移至健康度页)
+  const risks=[];
+  [...F].sort((a,b)=>b[4]-a[4]).slice(0,3).forEach(f=>
+    risks.push(`高复杂度 <b>${esc(f[2])}</b> CCN=${f[4]} <span class="small">@${esc(FILES[f[1]].label)}</span>`));
+  DATA.cycles.slice(0,3).forEach(c=>risks.push(`调用环：${c.length} 个函数互相调用`));
+  [...FILES].sort((a,b)=>b.ce-a.ce).slice(0,2).forEach(m=>{if(m.ce>0)
+    risks.push(`高扇出模块 <b>${esc(m.label)}</b> Ce=${m.ce}`);});
+  const rp=h('div','panel');
+  rp.innerHTML='<h2>重点风险 <span class="sub">完整清单见"健康度"页</span></h2><ul class="warnlist">'+
+    risks.map(r=>`<li>${r}</li>`).join('')+'</ul>';
+  s.appendChild(rp);
+}
+
+function scoreBreakdown(){
+  const hn=healthNow();
+  return hn.rows.map(([n,r,w,label,lost])=>{
+    const col=r>0.7?'var(--bad)':r>0.4?'var(--warn)':'var(--good)';
+    return [n,Math.min(1,r),1,col,`-${lost.toFixed(1)} / ${w}  (${label})`];
+  });
+}
+
+/* ================= 依赖矩阵 ================= */
+let matrixMode='call';
+let matrixOrderMode='topo';
+let matrixOrder=null;
+function renderMatrix(){
+  const s=document.getElementById('tab-matrix');
+  const p=h('div','panel');
+  p.innerHTML=`<h2>模块依赖矩阵 <span class="sub">行=调用方模块，列=被调用方模块；颜色越深=依赖越强</span></h2>
+    <div class="controls">
+      <button class="btn on" id="mCall">调用依赖</button>
+      <button class="btn" id="mInc">include 依赖</button>
+      <span style="width:12px"></span>
+      <button class="btn" id="oFile">文件序</button>
+      <button class="btn on" id="oTopo">拓扑序</button>
+      <button class="btn" id="oClus">聚类序</button>
+      <button class="btn" id="mExport">导出 CSV</button>
+      <span class="small" id="mStat"></span>
+    </div>
+    <div class="legend"><span class="small">依赖强度：</span>
+      <span class="small">0</span><span style="width:120px;height:10px;border-radius:3px;background:linear-gradient(90deg,rgba(86,156,214,.1),rgba(86,156,214,1))"></span><span class="small" id="mMax"></span>
+      <span><i style="background:transparent;border:1.5px solid #f85149"></i>拓扑序下上三角=反向调用(循环依赖)</span>
+      <span class="small">点击单元格查看函数级明细</span></div>
+    <div class="scroll" id="mWrap"></div>
+    <div id="mDetail"></div>
+    <div id="mTip" class="mtip" hidden></div>`;
+  s.appendChild(p);
+  p.querySelector('#mCall').onclick=()=>{matrixMode='call';toggleM(p);};
+  p.querySelector('#mInc').onclick=()=>{matrixMode='inc';toggleM(p);};
+  p.querySelector('#oFile').onclick=()=>{matrixOrderMode='file';toggleO(p);};
+  p.querySelector('#oTopo').onclick=()=>{matrixOrderMode='topo';toggleO(p);};
+  p.querySelector('#oClus').onclick=()=>{matrixOrderMode='cluster';toggleO(p);};
+  p.querySelector('#mExport').onclick=()=>{const links=matLinks(matrixMode);const rows=toCSV([['from','to','count']].concat(links.map(l=>[FILES[l[0]].label,FILES[l[1]].label,l[2]])));download(matrixMode+'-deps.csv',rows);};
+  computeMatrixOrder();
+  drawMatrix(p);
+}
+function toggleM(p){
+  p.querySelector('#mCall').classList.toggle('on',matrixMode==='call');
+  p.querySelector('#mInc').classList.toggle('on',matrixMode==='inc');
+  p.querySelector('#mDetail').innerHTML='';
+  computeMatrixOrder();
+  drawMatrix(p);
+}
+function toggleO(p){
+  const ids=['#oFile','#oTopo','#oClus'],vals=['file','topo','cluster'];
+  ids.forEach((id,k)=>p.querySelector(id).classList.toggle('on',vals[k]===matrixOrderMode));
+  p.querySelector('#mDetail').innerHTML='';
+  computeMatrixOrder();
+  drawMatrix(p);
+}
+
+// Kosaraju 求强连通分量(迭代版, 避免深递归)
+function sccKosaraju(out){
+  const n=out.length,vis=new Array(n).fill(false),finish=[];
+  for(let s=0;s<n;s++){
+    if(vis[s])continue;
+    const st=[[s,0]];vis[s]=true;
+    while(st.length){
+      const top=st[st.length-1],v=top[0];
+      if(top[1]<out[v].length){const w=out[v][top[1]++];if(!vis[w]){vis[w]=true;st.push([w,0]);}}
+      else{finish.push(v);st.pop();}
+    }
+  }
+  const rin=Array.from({length:n},()=>[]);
+  for(let v=0;v<n;v++)for(const w of out[v])rin[w].push(v);
+  const comp=new Array(n).fill(-1),comps=[];
+  for(let k=n-1;k>=0;k--){
+    const s=finish[k];if(comp[s]>=0)continue;
+    const cid=comps.length,stack=[s];comp[s]=cid;const c=[];
+    while(stack.length){const v=stack.pop();c.push(v);
+      for(const w of rin[v])if(comp[w]<0){comp[w]=cid;stack.push(w);}}
+    comps.push(c);
+  }
+  return {comp,comps};
+}
+// 只保留"有依赖"的模块, 去掉整片空白行列(不丢失任何非零数据)
+let _matMods={call:null,inc:null};
+function matrixMods(mode){
+  if(_matMods[mode])return _matMods[mode];
+  const set=new Set();
+  for(const l of matLinks(mode)){set.add(l[0]);set.add(l[1]);}
+  _matMods[mode]=[...set].sort((a,b)=>a-b);
+  return _matMods[mode];
+}
+// 计算行列顺序: 文件序 / 拓扑序(依赖落于下三角, 循环成对角块) / 耦合聚类序
+function computeMatrixOrder(){
+  const mods=matrixMods(matrixMode),n=mods.length;
+  if(matrixOrderMode==='file'){matrixOrder=mods.slice();return;}
+  const idx=new Map();mods.forEach((m,i)=>idx.set(m,i));
+  const out=Array.from({length:n},()=>[]);
+  for(const l of matLinks(matrixMode)){const a=idx.get(l[0]),b=idx.get(l[1]);
+    if(a!=null&&b!=null&&a!==b)out[a].push(b);}
+  if(matrixOrderMode==='topo'){
+    const {comp,comps}=sccKosaraju(out);
+    const C=comps.length;
+    const radj=Array.from({length:C},()=>new Set());
+    for(let i=0;i<n;i++)for(const j of out[i]){const a=comp[i],b=comp[j];
+      if(a!==b)radj[b].add(a);}                 // 反向: 被依赖者排在前面
+    const indeg=new Array(C).fill(0);
+    for(let a=0;a<C;a++)for(const b of radj[a])indeg[b]++;
+    const q=[],ord=[];
+    for(let a=0;a<C;a++)if(indeg[a]===0)q.push(a);
+    while(q.length){const a=q.shift();ord.push(a);
+      for(const b of radj[a])if(--indeg[b]===0)q.push(b);}
+    const seen=new Set(ord);for(let a=0;a<C;a++)if(!seen.has(a))ord.push(a);
+    matrixOrder=[];
+    for(const a of ord)for(const v of comps[a].slice().sort((x,y)=>x-y))matrixOrder.push(mods[v]);
+  } else {
+    // 耦合聚类(稀疏): 贪心最近邻成链, 断连则另起一簇
+    if(n===0){matrixOrder=[];return;}
+    const wmap=new Map(),deg=new Float64Array(n);
+    for(const l of matLinks(matrixMode)){const a=idx.get(l[0]),b=idx.get(l[1]);if(a==null||b==null||a===b)continue;
+      const k=a<b?a+'_'+b:b+'_'+a;wmap.set(k,(wmap.get(k)||0)+l[2]);deg[a]+=l[2];deg[b]+=l[2];}
+    const getw=(a,b)=>wmap.get(a<b?a+'_'+b:b+'_'+a)||0;
+    const used=new Array(n).fill(false),ord=[];
+    let cur=0;for(let i=1;i<n;i++)if(deg[i]>deg[cur])cur=i;
+    ord.push(cur);used[cur]=true;
+    while(ord.length<n){
+      let best=-1,bestS=-1e-9,bestDeg=-1;
+      for(let u=0;u<n;u++){if(used[u])continue;
+        const wu=getw(cur,u),sc=wu*2+(deg[u]-wu)*0.1;
+        if(sc>bestS+1e-9||(Math.abs(sc-bestS)<1e-9&&deg[u]>bestDeg)){best=u;bestS=sc;bestDeg=deg[u];}}
+      if(bestS<=0){best=-1;bestDeg=-1;
+        for(let u=0;u<n;u++)if(!used[u]&&deg[u]>bestDeg){best=u;bestDeg=deg[u];}}
+      ord.push(best);used[best]=true;cur=best;
+    }
+    matrixOrder=ord.map(i=>mods[i]);
+  }
+}
+function drawMatrix(p){
+  const mx=matrixMode==='call'?maxEdge:maxInc;
+  const links=matLinks(matrixMode);
+  const ord=matrixOrder||matrixMods(matrixMode);
+  const n=ord.length;
+  let total=0;for(const l of links)total+=l[2];
+  p.querySelector('#mStat').textContent=`${n} 个有依赖的模块 / 共 ${M} 个 · 非零模块对 ${links.length} · 依赖总量 ${total}`;
+  const mm=document.getElementById('mMax');if(mm)mm.textContent=String(mx);
+  const rgb=matrixMode==='call'?'86,156,214':'197,134,192';
+  if(n===0){p.querySelector('#mWrap').innerHTML='<div class="small">该模式下没有模块间依赖。</div>';return;}
+  if(n>MAT_GRID_MAX){
+    // 模块过多: 降级为按强度排序的稀疏列表, 避免 MxM 网格把浏览器拖死
+    const sorted=links.slice().sort((a,b)=>b[2]-a[2]).slice(0,600);
+    p.querySelector('#mWrap').innerHTML='<div class="small" style="margin:4px 0 8px">'+
+      '有依赖的模块数 '+n+' 超过 '+MAT_GRID_MAX+'，密集矩阵不便渲染，已降级为按依赖强度排序的稀疏列表（前 '+sorted.length+' 对，点行看函数级明细）。</div>'+
+      '<table><thead><tr><th>调用方</th><th>被调用方</th><th class="num">次数</th></tr></thead><tbody>'+
+      sorted.map(l=>`<tr data-i="${l[0]}" data-j="${l[1]}" data-v="${l[2]}" style="cursor:pointer">
+        <td>${esc(FILES[l[0]].label)}</td><td>${esc(FILES[l[1]].label)}</td>
+        <td class="num">${l[2]}</td></tr>`).join('')+'</tbody></table>';
+    p.querySelectorAll('#mWrap tr[data-i]').forEach(tr=>tr.onclick=()=>showCell(+tr.dataset.i,+tr.dataset.j,+tr.dataset.v));
+    return;
+  }
+  const CELL=22, HEAD=96;
+  let html=`<div class="mtx" style="grid-template-columns:${HEAD}px repeat(${n},${CELL}px);`+
+    `grid-template-rows:${HEAD}px repeat(${n},${CELL}px)">`;
+  html+='<div class="corner"></div>';
+  for(let c=0;c<n;c++){const j=ord[c];
+    html+=`<div class="ch" data-c="${c}" title="${esc(FILES[j].label)}">${esc(FILES[j].label)}</div>`;}
+  for(let r=0;r<n;r++){
+    const i=ord[r];
+    html+=`<div class="rh" data-r="${r}" title="${esc(FILES[i].label)}">${esc(FILES[i].label)}</div>`;
+    for(let c=0;c<n;c++){
+      const j=ord[c],v=matGet(matrixMode,i,j);
+      if(i===j){html+='<div class="cell h"></div>';continue;}
+      const a=v?0.14+0.86*Math.pow(v/mx,0.5):0;
+      const bg=v?`rgba(${rgb},${a.toFixed(2)})`:'transparent';
+      const back=(matrixOrderMode==='topo'&&v>0&&r<c);   // 上三角=反向调用/循环
+      const style=`background:${bg}`+(back?';outline:1.5px solid #f85149;outline-offset:-2px':'');
+      html+=`<div class="cell" style="${style}" data-i="${i}" data-j="${j}" data-r="${r}" data-c="${c}" data-v="${v}"`+
+        ` title="${esc(FILES[i].label)} → ${esc(FILES[j].label)} : ${v}${back?' (反向/循环)':''}">${v||''}</div>`;
+    }
+  }
+  html+='</div>';
+  p.querySelector('#mWrap').innerHTML=html;
+  const tip=document.getElementById('mTip');
+  const cellAt=new Map(),rhEls=new Map(),chEls=new Map();
+  p.querySelectorAll('.cell[data-r]').forEach(td=>cellAt.set(td.dataset.r+'_'+td.dataset.c,td));
+  p.querySelectorAll('.rh[data-r]').forEach(e=>rhEls.set(e.dataset.r,e));
+  p.querySelectorAll('.ch[data-c]').forEach(e=>chEls.set(e.dataset.c,e));
+  const clearHl=()=>p.querySelectorAll('.hlx').forEach(e=>e.classList.remove('hlx'));
+  p.querySelectorAll('.cell[data-i]').forEach(td=>{
+    td.onclick=()=>showCell(+td.dataset.i,+td.dataset.j,+td.dataset.v);
+    td.onmouseenter=()=>{
+      const r=td.dataset.r,c=td.dataset.c;      // 十字高亮: 同一行/列
+      if(r!=null&&c!=null){clearHl();
+        if(rhEls.get(r))rhEls.get(r).classList.add('hlx');
+        if(chEls.get(c))chEls.get(c).classList.add('hlx');
+        for(let k=0;k<n;k++){const a=cellAt.get(r+'_'+k);if(a)a.classList.add('hlx');
+          const b=cellAt.get(k+'_'+c);if(b)b.classList.add('hlx');}}
+      if(!tip)return;if(!(+td.dataset.v>0)){tip.hidden=true;return;}
+      tip.hidden=false;tip.textContent=td.title;};
+    td.onmousemove=e=>{if(!tip||tip.hidden)return;tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY+12)+'px';};
+    td.onmouseleave=()=>{if(tip)tip.hidden=true;clearHl();};
+  });
+}
+function showCell(i,j,v){
+  const box=document.getElementById('mDetail');
+  if(!v){box.innerHTML='';return;}
+  if(matrixMode==='inc'){
+    box.innerHTML=`<h2 style="margin-top:16px">${esc(FILES[i].label)} 包含 ${esc(FILES[j].label)}</h2>
+      <div class="small">#include "${esc(FILES[j].short)}"</div>`;
+    return;
+  }
+  const list=E.filter(([a,b])=>fFile(a)===i&&fFile(b)===j);
+  const cnt={};list.forEach(([a,b])=>cnt[a]=1);
+  box.innerHTML=`<h2 style="margin-top:16px">${esc(FILES[i].label)} → ${esc(FILES[j].label)} <span class="sub">${v} 条调用边</span></h2>
+    <div class="scroll" style="max-height:320px"><table><thead><tr><th>调用方</th><th>被调用</th><th class="num">CCN</th></tr></thead><tbody>`+
+    list.slice(0,300).map(([a,b])=>`<tr style="cursor:pointer" data-fn="${b}">
+      <td>${fq(a)}</td><td>${fq(b)}</td><td class="num" style="color:${ccnColor(fCcn(b))}">${fCcn(b)}</td></tr>`).join('')+
+    '</tbody></table></div>';
+  box.querySelectorAll('tr[data-fn]').forEach(tr=>tr.onclick=()=>openInGraph(+tr.dataset.fn));
+}
+
+/* ================= 调用图 ================= */
+let cgCenter=null,cgHops=2,cgPos=new Map(),cgAnim=null,cgPath=[],keepPos=false;
+function renderCallgraph(){
+  const s=document.getElementById('tab-callgraph');
+  const p=h('div','panel');
+  p.innerHTML=`<h2>符号调用图 <span class="sub">点节点展开邻居；已显示的节点保持原位，视口移到所点节点</span></h2>
+    <div class="controls">
+      <input id="cgSearch" list="cgList" placeholder="搜索函数名…" style="width:240px">
+      <datalist id="cgList">${F.map((f,i)=>`<option value="${esc(f[2])}">${esc(FILES[f[1]].label)}</option>`).join('')}</datalist>
+      <label class="small">展开层数
+        <select id="cgHops"><option>1</option><option selected>2</option><option>3</option></select></label>
+      <label class="small"><input type="checkbox" id="cgSpawn" checked> 线程/回调</label>
+      <label class="small"><input type="checkbox" id="cgHeur" checked> 启发式边</label>
+      <label class="small"><input type="checkbox" id="cgKeep" title="已显示节点保持原位，只移动新节点"> 保持位置</label>
+      <label class="small"><input type="checkbox" id="cgCyc" title="同一调用环用同色边框，环内调用边加粗"> 高亮环</label>
+      <button class="btn" id="cgChain">最长调用链</button>
+      <button class="btn" id="cgHot">最复杂函数</button>
+      <button class="btn" id="cgReset">重置布局</button>
+      <span class="small" id="cgInfo"></span>
+    </div>
+    <div class="cglegend">
+      <span><i class="sw" style="background:#04395e;border-color:#fff"></i>中心节点</span>
+      <span><i class="sw" style="background:#252526;border-color:#569cd6"></i>普通节点(边框色=模块)</span>
+      <span><i class="sw" style="background:#3a2f16;border-color:#cca700;border-style:dashed"></i>环成员(同色=同一环)</span>
+      <span><svg width="30" height="10" aria-hidden="true"><line x1="1" y1="5" x2="29" y2="5" stroke="#5a5a5a" stroke-width="2"/></svg>直接调用</span>
+      <span><svg width="30" height="10" aria-hidden="true"><line x1="1" y1="5" x2="29" y2="5" stroke="#5a5a5a" stroke-width="2" stroke-dasharray="2 3"/></svg>启发式(仅内置解析)</span>
+      <span><svg width="30" height="10" aria-hidden="true"><line x1="1" y1="5" x2="29" y2="5" stroke="#cca700" stroke-width="2" stroke-dasharray="5 3"/></svg>线程/回调</span>
+      <span><svg width="30" height="10" aria-hidden="true"><line x1="1" y1="5" x2="29" y2="5" stroke="#cca700" stroke-width="3"/></svg>环内调用</span>
+      <span><svg width="30" height="10" aria-hidden="true"><line x1="1" y1="5" x2="29" y2="5" stroke="#4daafc" stroke-width="3"/></svg>来源路径</span>
+      <span class="small">箭头=调用方向</span>
+      <span class="small">CCN 数字：<b style="color:var(--good)">低</b> / <b style="color:var(--warn)">中</b> / <b style="color:var(--bad)">高(超阈值)</b></span>
+    </div>
+    <div class="grid two" style="grid-template-columns:minmax(0,1fr) var(--side)">
+      <div class="cgwrap"><svg id="cg"></svg></div>
+      <div class="panel" id="cgDetail" style="margin:0"></div>
+    </div>`;
+  s.appendChild(p);
+  const hs=p.querySelector('#cgHops');if(hs)hs.value=String(cgHops);
+  const sel=p.querySelector('#cgSearch');
+  sel.onchange=()=>{const i=F.findIndex(f=>f[2]===sel.value);if(i>=0)centerGraph(i);};
+  p.querySelector('#cgHops').onchange=e=>{cgHops=+e.target.value;if(cgCenter!=null)centerGraph(cgCenter);};
+  p.querySelector('#cgSpawn').onchange=e=>{showSpawn=e.target.checked;saveState();drawGraph(false);};
+  p.querySelector('#cgHeur').onchange=e=>{showHeur=e.target.checked;saveState();drawGraph(false);};
+  p.querySelector('#cgKeep').onchange=e=>{keepPos=e.target.checked;saveState();drawGraph(false);};
+  p.querySelector('#cgCyc').onchange=e=>{showCyc=e.target.checked;saveState();drawGraph(false);};
+  p.querySelector('#cgChain').onclick=()=>centerGraph(LP[0]);
+  p.querySelector('#cgHot').onclick=()=>{let m=0;F.forEach((f,i)=>{if(f[4]>F[m][4])m=i;});centerGraph(m);};
+  p.querySelector('#cgReset').onclick=()=>{if(cgAnim)cancelAnimationFrame(cgAnim);cgAnim=null;cgPos.clear();cgPath=[];centerGraph(cgCenter!=null?cgCenter:LP[0]);};
+  // 初始：最长链中间那个（最复杂核心）
+  centerGraph(LP[Math.floor(LP.length/2)]);
+}
+function openInGraph(i){
+  document.querySelector('nav.tabs button[data-tab="callgraph"]').click();
+  centerGraph(i);
+}
+function centerGraph(id){
+  // 维护游走路径: 相邻则延伸; 回到路径上的节点则回退; 否则(跳转)重置
+  const last=cgPath[cgPath.length-1];
+  if(id!==last){
+    const idx=cgPath.indexOf(id);
+    if(idx>=0)cgPath=cgPath.slice(0,idx+1);
+    else if(last!=null&&(adj[last].includes(id)||radj[last].includes(id)))cgPath=cgPath.concat([id]);
+    else cgPath=[id];
+  }
+  cgCenter=id;
+  const sel=document.getElementById('cgSearch'); if(sel)sel.value=fName(id);
+  drawGraph(true);
+  const d=document.getElementById('cgDetail');
+  const f=F[id];
+  let spOut=0,spIn=0;
+  SPAWN.forEach((k,key)=>{const p=key.split('_');if(+p[0]===id)spOut++;if(+p[1]===id)spIn++;});
+  d.innerHTML=`<h2>${esc(f[2])}</h2>
+    <div class="small" style="margin-bottom:8px">${esc(FILES[f[1]].path)}:${f[9]}</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px">
+      ${kv('CCN',`<b style="color:${ccnColor(f[4])}">${f[4]}</b>`)}
+      ${kv('NLOC',f[5])}${kv('参数',f[6])}${kv('token',f[7])}
+      ${kv('长度',f[8])}
+      ${kv('扇入',`${f[11]} <span class="small">内 ${f[20]} / 外 ${f[21]}</span>`)}
+      ${kv('扇出',`${f[12]} <span class="small">内 ${f[22]} / 外 ${f[23]}</span>`)}
+      ${kv('调用深度',f[13])}${kv('子树深度',f[14])}
+      ${(spOut||spIn)?kv('线程/回调',`出 ${spOut} · 入 ${spIn}`):''}
+    </div>
+    <div style="margin-top:8px">${f[15]?'<span class="tag cyc">位于调用环</span>':''}
+      ${isHot(id)?'<span class="tag hot">复杂热点</span>':''}</div>
+    <div class="small" style="margin-top:10px">${esc(f[3])}</div>`;
+}
+function kv(k,v){return `<div class="card" style="padding:6px 9px"><div class="small">${k}</div><div>${v}</div></div>`;}
+// 分层邻居: 调用者(负层)在左, 被调用者(正层)在右
+function neighborhood(center,hops){
+  const seen=new Set([center]);
+  const byLayer={0:[center]};
+  for(let d=1;d<=hops;d++){
+    byLayer[-d]=[];byLayer[d]=[];
+    for(const n of (byLayer[-(d-1)]||[]))for(const c of radj[n])if(!seen.has(c)){seen.add(c);byLayer[-d].push(c);}
+    for(const n of (byLayer[d-1]||[]))for(const c of adj[n])if(!seen.has(c)){seen.add(c);byLayer[d].push(c);}
+  }
+  return byLayer;
+}
+// 按名称长度估算节点宽度, 保证符号名完整显示
+function nodeWidth(id){
+  const f=F[id];
+  const nameW=f[2].length*6.8;              // 10.5px 字号下的近似宽度
+  const ccnW=String(f[4]).length*6.6+18;    // CCN 徽标区
+  return Math.max(130, Math.min(680, nameW+ccnW+24));
+}
+// 分层布局 + 平滑动画: 只显示当前邻居(不堆积), 位置过渡而非瞬移, 视口对准中心节点
+function drawGraph(animate){
+  const svg=document.getElementById('cg');if(!svg)return;
+  if(cgPos.size===0)animate=false;      // 首次/重置直接定位
+  const byLayer=neighborhood(cgCenter,cgHops);
+  const CAP=26,rowH=44;
+  const layers=Object.keys(byLayer).map(Number).sort((a,b)=>a-b);
+  const shown=new Map();let maxW=130;
+  layers.forEach(L=>{
+    const full=byLayer[L].slice().sort((a,b)=>F[b][4]-F[a][4]);
+    const arr=full.slice(0,CAP);
+    shown.set(L,{arr,extra:full.length-arr.length});
+    arr.forEach(n=>{maxW=Math.max(maxW,nodeWidth(n));});
+  });
+  const colW=maxW+90;
+  const target=new Map();
+  layers.forEach(L=>{
+    const arr=shown.get(L).arr,total=rowH*(arr.length-1);
+    arr.forEach((n,k)=>target.set(n,{x:L*colW,y:-total/2+k*rowH}));
+  });
+  if(keepPos)target.forEach((p,id)=>{if(cgPos.has(id))target.set(id,{x:cgPos.get(id).x,y:cgPos.get(id).y});});
+  const start=new Map(),cur=new Map();
+  target.forEach((p,id)=>{
+    const s=cgPos.has(id)?{x:cgPos.get(id).x,y:cgPos.get(id).y}:{x:0,y:0};
+    start.set(id,s);cur.set(id,{x:s.x,y:s.y});
+  });
+  // 障碍矩形(用于连线绕开节点), 基于目标位置计算一次
+  const obst=[];
+  target.forEach((p,id)=>obst.push({id,x:p.x,y:p.y,hw:nodeWidth(id)/2+8,hh:23}));
+  function computeOff(a,b){
+    const pa=target.get(a),pb=target.get(b);
+    const dir=pb.x>=pa.x?1:-1;
+    const sx=pa.x+dir*nodeWidth(a)/2,sy=pa.y,ex=pb.x-dir*nodeWidth(b)/2,ey=pb.y;
+    const dx=ex-sx,dy=ey-sy,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
+    let pos=0,neg=0,maxPos=0,maxNeg=0;
+    for(const o of obst){
+      if(o.id===a||o.id===b)continue;
+      const t=((o.x-sx)*dx+(o.y-sy)*dy)/(len*len);
+      if(t<=0.06||t>=0.94)continue;
+      const px=sx+t*dx,py=sy+t*dy,d=Math.hypot(o.x-px,o.y-py);
+      if(d<o.hw+12){
+        const side=(o.x-px)*nx+(o.y-py)*ny,need=(o.hw+16)-d;
+        if(side>=0){pos++;maxPos=Math.max(maxPos,need);}else{neg++;maxNeg=Math.max(maxNeg,need);}
+      }
+    }
+    if(!pos&&!neg)return 0;
+    return (pos<=neg?1:-1)*(26+Math.max(maxPos,maxNeg));   // 往障碍少的一侧绕
+  }
+  const pathEdge=new Set();
+  for(let k=0;k+1<cgPath.length;k++){pathEdge.add(cgPath[k]+'_'+cgPath[k+1]);pathEdge.add(cgPath[k+1]+'_'+cgPath[k]);}
+  const pathSet=new Set(cgPath);
+  let g='<defs><marker id="cgarw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6a6a6a"/></marker><marker id="cgarw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4daafc"/></marker></defs>';
+  const focusScc=(cgCenter!=null&&CYC_SCC.has(F[cgCenter][16]))?F[cgCenter][16]:null;
+  const edgeList=[];
+  for(const [a,b] of E){
+    if(!target.has(a)||!target.has(b))continue;
+    const sp=isSpawn(a,b);if(sp&&!showSpawn)continue;
+    const heur=isHeur(a,b);if(heur&&!showHeur)continue;
+    const cyc=showCyc&&F[a][16]===F[b][16]&&CYC_SCC.has(F[a][16]);
+    edgeList.push({a,b,sp,heur,cyc,onPath:pathEdge.has(a+'_'+b),off:computeOff(a,b)});
+  }
+  edgeList.forEach((e,i)=>{
+    g+=`<path class="edge${e.sp?' spawn':''}${e.heur?' heur':''}${e.onPath?' hl':''}${e.cyc&&!e.onPath?' cyc':''}" data-i="${i}" data-a="${e.a}" data-b="${e.b}"${e.onPath?' marker-end="url(#cgarw2)"':''}/>`;
+  });
+  target.forEach((p,id)=>{
+    const f=F[id],sc=f[16],inCyc=showCyc&&CYC_SCC.has(sc),focusCyc=(focusScc!=null&&sc===focusScc);
+    const col=inCyc?cycColorOf(sc):fileColor(f[1]);
+    const w=nodeWidth(id),hgt=30,sel=id===cgCenter,onPath=pathSet.has(id);
+    const sw=sel?2.4:(focusCyc?3:(onPath?2:(inCyc?2.2:1.4)));
+    g+=`<g class="node" data-id="${id}">
+      <rect x="${-w/2}" y="${-hgt/2}" width="${w}" height="${hgt}" rx="6"
+        stroke="${sel?'#fff':(onPath?'#4daafc':col)}" stroke-width="${sw}" ${f[15]?'stroke-dasharray="4 3"':''}
+        fill="${sel?'#04395e':(focusCyc?'#3a2f16':'#252526')}"/>
+      <text x="${-w/2+10}" y="4">${esc(f[2])}</text>
+      <text class="ccn" x="${w/2-9}" y="4" text-anchor="end" fill="${ccnColor(f[4])}">${f[4]}</text></g>`;
+  });
+  layers.forEach(L=>{                 // 每层被截断的节点数显式提示
+    const {arr,extra}=shown.get(L);
+    if(extra>0){const p=target.get(arr[arr.length-1]);
+      g+=`<text x="${p.x}" y="${p.y+26}" text-anchor="middle" font-size="10" fill="#9d9d9d">+${extra} more</text>`;}
+  });
+  svg.innerHTML=`<g id="cgG">${g}</g>`;
+  const nodeEls=new Map();
+  svg.querySelectorAll('.node').forEach(n=>{nodeEls.set(+n.dataset.id,n);n.onclick=()=>centerGraph(+n.dataset.id);});
+  const edgeEls=[...svg.querySelectorAll('.edge')];
+  const place=(id,x,y)=>{const el=nodeEls.get(id);if(el)el.setAttribute('transform',`translate(${x},${y})`);
+    const c=cur.get(id);if(c){c.x=x;c.y=y;}};
+  const updEdges=()=>{edgeEls.forEach(e=>{
+    const info=edgeList[+e.dataset.i];if(!info)return;
+    const a=info.a,b=info.b,pa=cur.get(a),pb=cur.get(b);if(!pa||!pb)return;
+    const dir=pb.x>=pa.x?1:-1;
+    const sx=pa.x+dir*nodeWidth(a)/2,sy=pa.y,ex=pb.x-dir*nodeWidth(b)/2,ey=pb.y;
+    const dx=ex-sx,dy=ey-sy,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,off=info.off;
+    const c1x=sx+dx/3+nx*off,c1y=sy+dy/3+ny*off,c2x=sx+2*dx/3+nx*off,c2y=sy+2*dy/3+ny*off;
+    e.setAttribute('d',`M${sx},${sy} C${c1x},${c1y} ${c2x},${c2y} ${ex},${ey}`);});};
+  const wrap=svg.parentElement;
+  const cw=Math.max(320,wrap.clientWidth||900),ch=Math.max(260,wrap.clientHeight||560);
+  svg.setAttribute('viewBox',`${-cw/2} ${-ch/2} ${cw} ${ch}`);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  if(!animate){
+    target.forEach((p,id)=>{place(id,p.x,p.y);cgPos.set(id,{x:p.x,y:p.y});});
+    updEdges();
+  }else{
+    start.forEach((s,id)=>place(id,s.x,s.y));
+    updEdges();
+    const t0=performance.now(),dur=420;
+    if(cgAnim)cancelAnimationFrame(cgAnim);
+    const step=now=>{
+      const t=Math.min(1,(now-t0)/dur);
+      const e=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      target.forEach((p,id)=>{const s=start.get(id);place(id,s.x+(p.x-s.x)*e,s.y+(p.y-s.y)*e);});
+      updEdges();
+      if(t<1)cgAnim=requestAnimationFrame(step);
+      else{target.forEach((p,id)=>cgPos.set(id,{x:p.x,y:p.y}));cgAnim=null;}
+    };
+    cgAnim=requestAnimationFrame(step);
+  }
+  enableViewZoom(svg);
+  const info=document.getElementById('cgInfo');
+  if(info)info.textContent=`显示 ${target.size} 个节点 / 共 ${N}，中心：${fName(cgCenter)} · 同色边框=同一调用环 · 环内边橙色加粗 · 橙虚线=线程/回调`;
+  renderPathBar();
+}
+// 游走路径面包屑(来源路径高亮)
+function renderPathBar(){
+  const el=document.getElementById('cgPathBar');if(!el)return;
+  if(cgPath.length<2){el.innerHTML=cgPath.length?`<span class="small">游走路径: ${esc(fName(cgPath[0]))}</span>`:'';return;}
+  el.innerHTML='<span class="small">来源路径（点击可跳转）: </span>'+
+    cgPath.map((id,k)=>`<span class="pchip${k===cgPath.length-1?' cur':''}" data-fn="${id}">${esc(fName(id))}</span>`)
+    .join('<span style="color:var(--dim)"> → </span>');
+  el.querySelectorAll('.pchip').forEach(c=>c.onclick=()=>centerGraph(+c.dataset.fn));
+}
+function enablePanZoom(svg,pg){
+  if(!pg)return;
+  let sc=1,tx=0,ty=0,drag=false,px,py;
+  const upd=()=>pg.setAttribute('transform',`translate(${tx},${ty}) scale(${sc})`);
+  svg.onwheel=e=>{e.preventDefault();const f=e.deltaY<0?1.12:0.89;sc=Math.max(0.25,Math.min(3,sc*f));upd();};
+  svg.onmousedown=e=>{drag=true;px=e.clientX;py=e.clientY;svg.classList.add('drag');};
+  window.onmouseup=()=>{drag=false;svg.classList.remove('drag');};
+  svg.onmousemove=e=>{if(!drag)return;tx+=e.clientX-px;ty+=e.clientY-py;px=e.clientX;py=e.clientY;upd();};
+}
+// 基于 viewBox 的缩放/平移: 以鼠标为中心缩放, 适配自适应 viewBox
+function enableViewZoom(svg){
+  const getVB=()=>{const b=(svg.getAttribute('viewBox')||'0 0 1000 700').split(/\s+/).map(Number);
+    return {x:b[0],y:b[1],w:b[2],h:b[3]};};
+  const setVB=v=>svg.setAttribute('viewBox',`${v.x} ${v.y} ${v.w} ${v.h}`);
+  if(!svg._vz){svg._vz=1;window.addEventListener('mouseup',()=>{svg._drag=false;svg.style.cursor='grab';});}
+  svg.onwheel=e=>{e.preventDefault();const r=svg.getBoundingClientRect();if(!r.width)return;
+    const v=getVB(),mx=v.x+(e.clientX-r.left)/r.width*v.w,my=v.y+(e.clientY-r.top)/r.height*v.h;
+    const f=e.deltaY<0?0.86:1.163;
+    setVB({x:mx-(mx-v.x)*f,y:my-(my-v.y)*f,w:v.w*f,h:v.h*f});};
+  svg.onmousedown=e=>{svg._drag=true;svg._px=e.clientX;svg._py=e.clientY;svg.style.cursor='grabbing';};
+  svg.onmousemove=e=>{if(!svg._drag)return;const r=svg.getBoundingClientRect();if(!r.width)return;
+    const v=getVB();v.x-=(e.clientX-svg._px)/r.width*v.w;v.y-=(e.clientY-svg._py)/r.height*v.h;
+    svg._px=e.clientX;svg._py=e.clientY;setVB(v);};
+}
+
+/* ================= 复杂度 ================= */
+const cx={mod:-1,min:1,q:''};
+let cxRows=[],cxShown=300;
+function renderComplexity(){
+  const s=document.getElementById('tab-complexity');
+  const p=h('div','panel');
+  p.innerHTML=`<h2>复杂度明细 <span class="sub">按 CCN 排序；点击行进入调用图</span></h2>
+    <div class="controls">
+      <select id="cxMod"><option value="-1">全部模块</option>${FILES.map((f,i)=>`<option value="${i}">${esc(f.label)}</option>`).join('')}</select>
+      <label class="small">CCN ≥ <input id="cxMin" type="number" value="1" min="1" style="width:64px"></label>
+      <input id="cxQ" placeholder="过滤函数名…" style="width:200px">
+      <button class="btn" id="cxExport">导出 CSV</button>
+      <button class="btn" id="cxMore" style="display:none">加载更多</button>
+      <span class="small" id="cxCount"></span>
+    </div>
+    <div class="scroll"><table id="cxTable"><thead><tr>
+      <th data-k="name">函数</th><th data-k="mod">模块</th><th data-k="ccn" class="num" title="圈复杂度=1+判定点数；>阈值即热点">CCN</th>
+      <th style="width:160px">CCN 分布</th><th data-k="nloc" class="num" title="非空非注释代码行">NLOC</th>
+      <th data-k="param" class="num" title="参数个数">参数</th><th data-k="token" class="num" title="词法记号数">token</th>
+      <th data-k="len" class="num" title="函数物理行数">长度</th><th data-k="fanin" class="num" title="被调用者数(同文件/跨文件)">扇入(内/外)</th>
+      <th data-k="fanout" class="num" title="调用者数(同文件/跨文件)">扇出(内/外)</th><th data-k="depth" class="num" title="从入口到它的最长调用层数">深度</th><th>标记</th>
+    </tr></thead><tbody id="cxBody"></tbody></table></div>`;
+  s.appendChild(p);
+  p.querySelector('#cxMod').onchange=e=>{cx.mod=+e.target.value;fillCx();};
+  p.querySelector('#cxMin').oninput=e=>{cx.min=+e.target.value||1;fillCx();};
+  let qT=null;
+  p.querySelector('#cxQ').oninput=e=>{clearTimeout(qT);const v=e.target.value.toLowerCase();qT=setTimeout(()=>{cx.q=v;fillCx();},150);};
+  p.querySelector('#cxMore').onclick=()=>{cxShown+=300;renderCxRows();};
+  p.querySelector('#cxExport').onclick=()=>{const rows=toCSV([['函数','模块','CCN','NLOC','参数','token','长度','扇入内','扇入外','扇出内','扇出外','深度','环','热点']].concat(cxRows.map(f=>[f[2],FILES[f[1]].label,f[4],f[5],f[6],f[7],f[8],f[20],f[21],f[22],f[23],f[13],f[15]?1:0,isHot(f[0])?1:0])));download('complexity.csv',rows);};
+  let sortK='ccn',dir=-1;
+  p.querySelectorAll('#cxTable th[data-k]').forEach(th=>th.onclick=()=>{
+    if(sortK===th.dataset.k)dir=-dir;else{sortK=th.dataset.k;dir=-1;}
+    fillCx(sortK,dir);
+  });
+  fillCx();
+}
+function fillCx(sortK,dir){
+  sortK=sortK||'ccn';dir=dir||-1;
+  const key={name:f=>f[2],mod:f=>FILES[f[1]].label,ccn:f=>f[4],nloc:f=>f[5],param:f=>f[6],
+    token:f=>f[7],len:f=>f[8],fanin:f=>f[11],fanout:f=>f[12],depth:f=>f[13]}[sortK];
+  let rows=F.filter(f=>(cx.mod<0||f[1]===cx.mod)&&f[4]>=cx.min&&(!cx.q||f[2].toLowerCase().includes(cx.q)));
+  rows.sort((a,b)=>{const x=key(a),y=key(b);return (x>y?1:x<y?-1:0)*dir;});
+  cxRows=rows;cxShown=300;renderCxRows();
+}
+function renderCxRows(){
+  const rows=cxRows,n=rows.length;
+  document.getElementById('cxCount').textContent=`${n} 个函数`+(n>cxShown?`（显示前 ${cxShown}）`:'');
+  const body=document.getElementById('cxBody');
+  if(!n){body.innerHTML='<tr><td colspan="12" class="small">无匹配函数</td></tr>';}
+  else{body.innerHTML=rows.slice(0,cxShown).map(f=>`<tr data-fn="${f[0]}" style="cursor:pointer">
+    <td>${esc(f[2])}</td><td class="small">${esc(FILES[f[1]].label)}</td>
+    <td class="num" style="color:${ccnColor(f[4])};font-weight:700">${f[4]}</td>
+    <td>${bar(f[4],maxCcn,ccnColor(f[4]))}</td>
+    <td class="num">${fmt(f[5])}</td><td class="num">${f[6]}</td><td class="num">${fmt(f[7])}</td>
+    <td class="num">${f[8]}</td><td class="num">${fanCell(f[11],f[20],f[21])}</td><td class="num">${fanCell(f[12],f[22],f[23])}</td>
+    <td class="num">${f[13]}</td>
+    <td>${f[15]?'<span class="tag cyc">环</span>':''}${isHot(f[0])?'<span class="tag hot">热点</span>':''}</td></tr>`).join('');
+    body.querySelectorAll('tr').forEach(tr=>tr.onclick=()=>openInGraph(+tr.dataset.fn));}
+  const mb=document.getElementById('cxMore');
+  if(mb)mb.style.display=(n>cxShown)?'inline-block':'none';
+}
+
+/* ================= 调用深度 ================= */
+// 调用链卡片渲染(全局最长链 / 单函数最长链 共用)
+function chainHTML(ids,sizes,markId){
+  return '<div class="chain">'+ids.map((id,k)=>{
+    const f=F[id],s=sizes?sizes[k]:null,cyc=f[15],mid=(markId!=null&&id===markId);
+    return `<span class="card${mid?' mid':''}" style="cursor:pointer;border-color:${mid?'var(--acc)':(cyc?'#6b5a1a':'')}" data-fn="${id}">
+      <div style="font-weight:600">${esc(f[2])}${s&&s>1?` <span class="tag cyc">⛓${s}</span>`:(cyc&&!s?' <span class="tag cyc">环</span>':'')}</div>
+      <div class="small">${esc(FILES[f[1]].label)} · CCN <b style="color:${ccnColor(f[4])}">${f[4]}</b></div></span>`+
+      (k<ids.length-1?'<span class="arrow">→</span>':'');
+  }).join('')+'</div>';
+}
+// SCC 索引(depth/子树深度都是按强连通分量缩点后算的, 故链路也在分量级重构)
+let SCC_IDX=null;
+function buildSCCIndex(){
+  if(SCC_IDX)return SCC_IDX;
+  const members={},rep={},depth={},sub={},cad={},cpred={};
+  F.forEach(f=>{(members[f[16]]=members[f[16]]||[]).push(f[0]);});
+  Object.keys(members).forEach(c=>{const m=members[c];
+    depth[c]=F[m[0]][13];sub[c]=F[m[0]][14];
+    rep[c]=m.reduce((a,b)=>F[b][4]>F[a][4]?b:a,m[0]);});
+  E.forEach(([a,b])=>{const ca=F[a][16],cb=F[b][16];
+    if(ca!==cb){(cad[ca]=cad[ca]||[]).push(cb);(cpred[cb]=cpred[cb]||[]).push(ca);}});
+  SCC_IDX={rep,depth,sub,cad,cpred};
+  return SCC_IDX;
+}
+// 经过某函数的最长调用链: 分量级向上到入口 + 向下到叶子; 所选函数用自身代表其分量
+function chainThrough(id){
+  const ix=buildSCCIndex();
+  const c0=F[id][16],comps=[c0];
+  let c=c0;
+  while(ix.depth[c]>0){const p=(ix.cpred[c]||[]).find(x=>ix.depth[x]===ix.depth[c]-1);if(p==null)break;comps.unshift(p);c=p;}
+  c=c0;
+  while(ix.sub[c]>0){const s=(ix.cad[c]||[]).find(x=>ix.sub[x]===ix.sub[c]-1);if(s==null)break;comps.push(s);c=s;}
+  return comps.map(cc=>cc===c0?id:ix.rep[cc]);
+}
+function depthSelect(id){
+  document.querySelectorAll('#depthTable tr[data-fn]').forEach(tr=>tr.classList.toggle('sel',+tr.dataset.fn===id));
+  const chain=chainThrough(id);
+  const d=F[id][13],s=F[id][14];
+  const box=document.getElementById('depthChain');
+  box.innerHTML=`<h2>${esc(fName(id))} 的最长调用链 <span class="sub">上游 ${d} 层（表列"深度"） + 下游 ${s} 层（表列"子树深度"） + 自身 = 共 ${chain.length} 个节点；中间蓝框即所选函数</span></h2>`+chainHTML(chain,null,id);
+  box.querySelectorAll('[data-fn]').forEach(e=>e.onclick=()=>openInGraph(+e.dataset.fn));
+  if(box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function renderDepth(){
+  const s=document.getElementById('tab-depth');
+  const maxD=Math.max(...F.map(f=>f[13]));
+  const hist=new Array(maxD+1).fill(0);
+  F.forEach(f=>hist[f[13]]++);
+  const hm=Math.max(...hist);
+  const p1=h('div','panel');
+  p1.innerHTML=`<h2>调用深度分布 <span class="sub">深度=从入口函数到该函数的最长调用链长度（环内函数视为同一层）</span></h2>
+    <div style="display:flex;align-items:flex-end;gap:3px;height:160px;padding-top:10px">`+
+    hist.map((v,i)=>`<div title="深度 ${i}: ${v} 个函数" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%">
+      <div class="small">${v||''}</div>
+      <div style="width:100%;background:linear-gradient(180deg,#4daafc,#0078d4);height:${pct(v,hm)}%;border-radius:3px 3px 0 0;min-height:${v?2:0}px"></div>
+      <div class="small" style="font-size:9px">${i%2===0?i:''}</div></div>`).join('')+
+    `</div><div class="small" style="margin-top:6px">最大深度 ${maxD}；入口函数(扇入=0) ${DATA.roots.length} 个</div>`;
+  s.appendChild(p1);
+
+  // 全局最长调用链
+  const p2=h('div','panel');
+  p2.innerHTML='<h2>最长调用链 <span class="sub">'+LP.length+' 层；标 ⛓ 表示该层是一个调用环（强连通分量）</span></h2>'+chainHTML(LP,LPS);
+  s.appendChild(p2);
+  p2.querySelectorAll('[data-fn]').forEach(e=>e.onclick=()=>openInGraph(+e.dataset.fn));
+
+  // 最深的函数(点行查看该函数的最长调用链)
+  const top=[...F].sort((a,b)=>b[13]-a[13]||b[14]-a[14]).slice(0,20);
+  const p3=h('div','panel');
+  p3.innerHTML='<h2>深度最大的函数 <span class="sub">点一行在右侧查看该函数的最长调用链；点函数名跳调用图。深度=到入口层数，子树深度=到叶子层数，链节点数=二者之和+1</span></h2>'+
+    '<div class="depthrow">'+
+      '<div class="scroll" style="max-height:var(--viz-h)"><table id="depthTable"><thead><tr><th>函数</th><th>模块</th><th class="num">深度</th>'+
+      '<th class="num">子树深度</th><th class="num">CCN</th><th class="num">扇入</th></tr></thead><tbody>'+
+      top.map(f=>`<tr data-fn="${f[0]}" style="cursor:pointer"><td><span class="fnlink" data-open="${f[0]}">${esc(f[2])}</span></td>
+        <td class="small">${esc(FILES[f[1]].label)}</td><td class="num">${f[13]}</td>
+        <td class="num">${f[14]}</td><td class="num" style="color:${ccnColor(f[4])}">${f[4]}</td>
+        <td class="num">${f[11]}</td></tr>`).join('')+'</tbody></table></div>'+
+      '<div id="depthChain" class="depthside"><div class="small">点左侧一行，这里显示该函数的最长调用链。</div></div>'+
+    '</div>';
+  s.appendChild(p3);
+  p3.querySelectorAll('#depthTable tr[data-fn]').forEach(tr=>tr.onclick=()=>depthSelect(+tr.dataset.fn));
+  p3.querySelectorAll('.fnlink').forEach(sp=>sp.onclick=e=>{e.stopPropagation();openInGraph(+sp.dataset.open);});
+}
+
+/* ================= 健康度 ================= */
+function renderHealth(){
+  const s=document.getElementById('tab-health');
+  const hn=healthNow();
+  const col=hn.score>=75?'var(--good)':hn.score>=55?'var(--warn)':'var(--bad)';
+  const p=h('div','panel');
+  p.innerHTML=`<h2>健康度评分 <span class="sub">拖动滑块调整权重，实时重算</span></h2>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <div style="font-size:44px;font-weight:800;color:${col}">${hn.score}<span style="font-size:14px;color:var(--dim)"> / 100</span></div>
+      <div style="flex:1;min-width:340px">
+      ${scoreBreakdown().map((x,k)=>`<div style="display:flex;align-items:center;gap:10px;margin:6px 0">
+        <div style="width:96px" class="small">${x[0]}</div>
+        <input type="range" min="0" max="40" value="${hWeights[k]}" data-w="${k}" style="width:110px">
+        <div class="small" style="width:30px">${hWeights[k]}</div>
+        <div style="flex:1">${bar(x[1],1,x[3])}</div>
+        <div class="small num" style="width:150px;text-align:right">${x[4]}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="small" style="margin-top:10px">评分 = 100 − Σ(各项归一化比例 × 权重)，下限 0；热点阈值可在顶部调整。</div>`;
+  s.appendChild(p);
+  p.querySelectorAll('input[type=range]').forEach(r=>r.oninput=()=>{
+    hWeights[+r.dataset.w]=+r.value;saveState();
+    s.innerHTML='';renderHealth();
+  });
+
+  // 模块记分卡
+  const p2=h('div','panel');
+  p2.innerHTML='<h2>模块健康记分卡 <span class="sub">I=Ce/(Ca+Ce)：0=最稳定(被依赖)，1=最不稳定(依赖他人)</span></h2>'+
+    '<div class="scroll"></div>';
+  s.appendChild(p2);
+  mountModuleTable(p2.querySelector('.scroll'), true);
+
+  // 调用环明细(强连通分量)
+  const cyc=(DATA.cycles||[]).slice().sort((a,b)=>b.length-a.length);
+  if(cyc.length){
+    const cp=h('div','panel');
+    cp.innerHTML='<h2>调用环明细 <span class="sub">'+cyc.length+' 个环 · 共 '+
+      cyc.reduce((s,c)=>s+c.length,0)+' 个函数；同一环内函数互相(直接/间接)调用，点函数跳调用图</span></h2>'+
+      cyc.map((c,k)=>{
+        const shown=c.slice().sort((a,b)=>F[b][4]-F[a][4]);
+        const cap=60;
+        return '<div class="cycblock"><div class="small" style="margin-bottom:4px">'+
+          '环 #'+(k+1)+' · <b>'+c.length+'</b> 个函数'+
+          (c.length===1?'（自递归）':'')+
+          ' <button class="btn" data-cyc="'+shown[0]+'" style="padding:1px 8px;margin-left:6px">查看</button></div>'+
+          shown.slice(0,cap).map(id=>`<span class="pchip" data-fn="${id}" title="CCN ${F[id][4]} @${esc(FILES[F[id][1]].label)}">${esc(fName(id))}</span>`).join('')+
+          (c.length>cap?`<span class="small"> …还有 ${c.length-cap} 个</span>`:'')+
+          '</div>';
+      }).join('');
+    s.appendChild(cp);
+    cp.querySelectorAll('.pchip[data-fn]').forEach(e=>e.onclick=()=>openInGraph(+e.dataset.fn));
+    cp.querySelectorAll('.btn[data-cyc]').forEach(e=>e.onclick=()=>{cgHops=3;const hs=document.getElementById('cgHops');if(hs)hs.value='3';saveState();openInGraph(+e.dataset.cyc);});
+  }
+
+  // 告警
+  const warn=[];
+  [...F].sort((a,b)=>b[4]-a[4]).slice(0,8).forEach(f=>warn.push(['高复杂度',
+    `${esc(f[2])} <span class="small">@${esc(FILES[f[1]].label)}</span> CCN=<b style="color:var(--bad)">${f[4]}</b>`]));
+  if(cyc.length)warn.push(['调用环',`共 ${cyc.length} 个环、${cyc.reduce((s,c)=>s+c.length,0)} 个函数（明细见上方"调用环明细"）`]);
+  [...FILES].sort((a,b)=>b.ce-a.ce).slice(0,4).forEach(m=>{if(m.ce>0)
+    warn.push(['高扇出模块',`${esc(m.label)} 依赖了 ${m.ce} 个外部函数（Ce）`]);});
+  const dead=F.filter(f=>f[11]===0&&!/^main$/.test(f[2])&&!/^luaopen_/.test(f[2])&&!/^luaL_/.test(f[2])).length;
+  warn.push(['入口/孤立函数',`${dead} 个函数没有任何项目内调用者（可能是入口、回调或死代码）`]);
+  const p3=h('div','panel');
+  p3.innerHTML='<h2>风险与关注点</h2><ul class="warnlist">'+
+    warn.map(w=>`<li><span class="tag ${w[0]==='调用环'?'cyc':w[0]==='高复杂度'?'hot':'ok'}">${w[0]}</span> ${w[1]}</li>`).join('')+'</ul>';
+  s.appendChild(p3);
+}
+
+/* ================= 整洁度 ================= */
+function renderCleanliness(){
+  const s=document.getElementById('tab-cleanliness');
+  const has=f=>f[27]>=0;
+  const mis=F.filter(has).map(f=>f[27]);
+  const avgMI=mis.length?Math.round(mis.reduce((a,b)=>a+b,0)/mis.length*10)/10:'-';
+  const lowMI=F.filter(f=>has(f)&&f[27]<65).length;
+  const ndF=F.filter(f=>f[26]>0);
+  const avgND=ndF.length?Math.round(ndF.reduce((a,b)=>a+b[26],0)/ndF.length*10)/10:0;
+  const deep=F.filter(f=>f[26]>4);
+  const dup=DATA.dup_rate||{},dupBlocks=DATA.dup_blocks||[];
+  const hyg=DATA.hygiene||{},todo=hyg.todo||[],longl=hyg.long_lines||[];
+  const kpis=[
+    ['平均维护性 MI',avgMI,(avgMI!=='-'&&avgMI<65)?'bad':((avgMI!=='-'&&avgMI<85)?'warn':'')],
+    ['低 MI 函数(<65)',fmt(lowMI),lowMI?'warn':''],
+    ['平均嵌套深度',avgND,''],
+    ['深嵌套函数(>4)',fmt(deep.length),deep.length?'warn':''],
+    ['代码重复率',(dup.dup||'0%'),''],
+    ['重复块',fmt(dupBlocks.length),''],
+    ['TODO/FIXME',fmt(todo.length),todo.length?'warn':''],
+    ['超长行(>120)',fmt(longl.length),''],
+  ];
+  const gp=h('div','panel kpig');
+  gp.innerHTML='<h2>整洁度概览</h2><div class="kpis">'+kpis.map(k=>
+    `<div class="kpi ${k[2]}"><div class="v">${k[1]}</div><div class="l">${k[0]}</div></div>`).join('')+'</div>';
+  s.appendChild(gp);
+
+  const worst=F.filter(has).sort((a,b)=>a[27]-b[27]).slice(0,20);
+  const p1=h('div','panel');
+  p1.innerHTML='<h2>维护性最差函数 <span class="sub">MI<65 差 / 65-85 中 / ≥85 好；点击跳调用图</span></h2>'+
+    '<table><thead><tr><th>函数</th><th>模块</th><th class="num" title="维护性指数">MI</th><th class="num" title="Halstead 体积">H-V</th><th class="num">CCN</th><th class="num">NLOC</th><th class="num">嵌套</th></tr></thead><tbody>'+
+    worst.map(f=>`<tr data-fn="${f[0]}" style="cursor:pointer"><td>${esc(f[2])}</td><td class="small">${esc(FILES[f[1]].label)}</td>
+      <td class="num" style="color:${f[27]<65?'var(--bad)':f[27]<85?'var(--warn)':'var(--good)'};font-weight:700">${f[27]}</td>
+      <td class="num">${fmt(Math.round(f[25]))}</td><td class="num" style="color:${ccnColor(f[4])}">${f[4]}</td>
+      <td class="num">${f[5]}</td><td class="num">${f[26]||''}</td></tr>`).join('')+'</tbody></table>';
+  s.appendChild(p1);
+  p1.querySelectorAll('tr[data-fn]').forEach(tr=>tr.onclick=()=>openInGraph(+tr.dataset.fn));
+
+  const deepTop=[...deep].sort((a,b)=>b[26]-a[26]||b[4]-a[4]).slice(0,20);
+  const p2=h('div','panel');
+  p2.innerHTML='<h2>嵌套最深的函数 <span class="sub">>4 层提示；点击跳调用图</span></h2>'+
+    '<table><thead><tr><th>函数</th><th>模块</th><th class="num">嵌套深度</th><th class="num">CCN</th><th class="num">NLOC</th></tr></thead><tbody>'+
+    (deepTop.length?deepTop.map(f=>`<tr data-fn="${f[0]}" style="cursor:pointer"><td>${esc(f[2])}</td><td class="small">${esc(FILES[f[1]].label)}</td>
+      <td class="num" style="color:var(--warn);font-weight:700">${f[26]}</td><td class="num">${f[4]}</td><td class="num">${f[5]}</td></tr>`).join('')
+      :'<tr><td colspan="5" class="small">没有超过 4 层的函数</td></tr>')+'</tbody></table>';
+  s.appendChild(p2);
+  p2.querySelectorAll('tr[data-fn]').forEach(tr=>tr.onclick=()=>openInGraph(+tr.dataset.fn));
+
+  const p3=h('div','panel');
+  p3.innerHTML='<h2>重复代码块 <span class="sub">重复率 '+(dup.dup||'0%')+(dup.uniq?'（unique '+dup.uniq+'）':'')+'；同一块内各行相互重复</span></h2>'+
+    (dupBlocks.length?dupBlocks.slice(0,60).map((b,k)=>'<div class="cycblock" style="border-left-color:var(--acc)"><div class="small">重复块 #'+(k+1)+' · '+b.length+' 处</div>'+
+      b.map(seg=>`<span class="pchip">${esc(seg[0])}:${seg[1]}-${seg[2]}</span>`).join('')+'</div>').join('')
+      :'<div class="small">未检测到重复块。</div>');
+  s.appendChild(p3);
+
+  const L=[];
+  if((hyg.include_cycles||[]).length)L.push(['include 环',hyg.include_cycles.map(c=>c.map(esc).join(' → ')).join('；')]);
+  if((hyg.missing_guard||[]).length)L.push(['缺 include 守卫',hyg.missing_guard.slice(0,20).map(esc).join('、')]);
+  if((hyg.dup_includes||[]).length)L.push(['重复 include',hyg.dup_includes.slice(0,20).map(x=>esc(x[0])+':'+esc(x[1])).join('、')]);
+  if(longl.length)L.push(['超长行(>120)',longl.slice(0,20).map(x=>esc(x[0])+':'+x[1]+'('+x[2]+')').join('、')]);
+  if(todo.length)L.push(['TODO/FIXME/HACK',todo.slice(0,20).map(x=>esc(x[0])+':'+x[1]+' '+esc(x[2])+' '+esc(x[3])).join('；')]);
+  const p4=h('div','panel');
+  p4.innerHTML='<h2>卫生检查 <span class="sub">include 环 / 缺失守卫 / 重复 include / 超长行 / TODO</span></h2>'+
+    (L.length?'<ul class="warnlist">'+L.map(x=>`<li><span class="tag">${x[0]}</span> ${x[1]}</li>`).join('')+'</ul>'
+      :'<div class="small">未发现明显卫生问题。</div>');
+  s.appendChild(p4);
+}
+
+/* ================= 接口全景 ================= */
+let panoMode='call', panoSel=-1, panoExpand=false, panoPos=null;
+
+function renderPanorama(){
+  const s=document.getElementById('tab-panorama');
+  const p=h('div','panel');
+  p.innerHTML=`    <h2>接口全景图 <span class="sub">力导向布局：方块=模块(范围)，连线=模块间依赖(箭头示向、粗细示强度)；点击模块查看接口与依赖，可展开接口函数</span></h2>
+    <div class="controls">
+      <button class="btn on" id="pCall">调用依赖</button>
+      <button class="btn" id="pInc">include 依赖</button>
+      <input id="pSearch" list="pList" placeholder="搜索模块…" style="width:170px">
+      <datalist id="pList">${FILES.map(f=>`<option value="${esc(f.label)}">`).join('')}</datalist>
+      <label class="small"><input type="checkbox" id="pExp"> 展开接口函数</label>
+      <button class="btn" id="pReset">重排布局</button>
+      <span class="small" id="pInfo"></span>
+    </div>
+    <div class="cglegend">
+      <span><i class="sw" style="background:#252526;border-color:#4ec9b0"></i>稳定(被依赖)</span>
+      <span><i class="sw" style="background:#252526;border-color:#cca700"></i>中等</span>
+      <span><i class="sw" style="background:#252526;border-color:#f85149"></i>不稳定(依赖他人)</span>
+      <span><i class="sw" style="background:#252526;border-color:#cca700;border-style:dashed"></i>位于调用环</span>
+      <span><svg width="30" height="10" aria-hidden="true"><line x1="1" y1="5" x2="29" y2="5" stroke="#6a6a6a" stroke-width="2"/></svg>单向依赖</span>
+      <span><svg width="30" height="10" aria-hidden="true"><line x1="1" y1="5" x2="29" y2="5" stroke="#e06c9f" stroke-width="3"/></svg>双向依赖</span>
+      <span class="small">选中模块后，连线上光点流动表示方向</span>
+    </div>
+    <div class="grid two" style="grid-template-columns:minmax(0,1fr) var(--side)">
+      <svg id="pano" class="pano"></svg>
+      <div class="panel" id="pDetail" style="margin:0"></div>
+    </div>`;
+  s.appendChild(p);
+  p.querySelector('#pCall').onclick=()=>{panoMode='call';togP(p);};
+  p.querySelector('#pInc').onclick=()=>{panoMode='inc';togP(p);};
+  p.querySelector('#pSearch').onchange=e=>{const i=FILES.findIndex(f=>f.label===e.target.value);if(i>=0)selectP(i);};
+  p.querySelector('#pExp').onchange=e=>{panoExpand=e.target.checked;drawPano(false);};
+  p.querySelector('#pReset').onclick=()=>{panoSeed++;panoPos=null;drawPano(true);};
+  drawPano(true);
+}
+function togP(p){
+  p.querySelector('#pCall').classList.toggle('on',panoMode==='call');
+  p.querySelector('#pInc').classList.toggle('on',panoMode==='inc');
+  panoPos=null;drawPano(true);
+}
+// 全景显示的模块列表: 模块过多时按耦合度取前 PANO_MAX 个
+let PANO_MODS=null;
+function panoModsList(){
+  if(PANO_MODS)return PANO_MODS;
+  if(M<=PANO_MAX){PANO_MODS=[...Array(M).keys()];return PANO_MODS;}
+  const deg=new Float64Array(M);
+  for(const l of CALL_LINKS){deg[l[0]]+=l[2];deg[l[1]]+=l[2];}
+  for(const l of INC_LINKS){deg[l[0]]+=l[2];deg[l[1]]+=l[2];}
+  PANO_MODS=[...Array(M).keys()].filter(i=>deg[i]>0)
+    .sort((a,b)=>deg[b]-deg[a]).slice(0,PANO_MAX);
+  return PANO_MODS;
+}
+function selectP(i){panoSel=(panoSel===i?-1:i);drawPano(false);}
+
+let panoSeed=1;
+function layoutPano(){
+  // Fruchterman-Reingold 力导向布局(在限流后的模块子集上, 稀疏边)
+  const mods=panoModsList(),n=mods.length;
+  const idxOf=new Map();mods.forEach((m,i)=>idxOf.set(m,i));
+  let s=(panoSeed*2654435761)%2147483647; if(s<=0)s+=2147483646;
+  const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};
+  const agg=new Map();
+  for(const l of matLinks(panoMode)){const a=idxOf.get(l[0]),b=idxOf.get(l[1]);
+    if(a==null||b==null||a===b)continue;
+    const kk=a<b?a+'_'+b:b+'_'+a;agg.set(kk,(agg.get(kk)||0)+l[2]);}
+  const links=[];agg.forEach((w,kk)=>{const p=kk.split('_');links.push([+p[0],+p[1],1+Math.log(1+w)*0.7]);});
+  const k=150*Math.sqrt(Math.max(1,n)/60);
+  const initR=k*Math.sqrt(n)*0.6;
+  const pos=[];for(let i=0;i<n;i++)pos.push({x:(rnd()-.5)*2*initR,y:(rnd()-.5)*2*initR});
+  let t=initR;
+  for(let it=0;it<600;it++){
+    const dx=new Float64Array(n),dy=new Float64Array(n);
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+      const ax=pos[i].x-pos[j].x,ay=pos[i].y-pos[j].y,d=Math.hypot(ax,ay)||0.01;
+      const f=k*k/d,ux=ax/d,uy=ay/d;
+      dx[i]+=ux*f;dy[i]+=uy*f;dx[j]-=ux*f;dy[j]-=uy*f;
+    }
+    for(let e=0;e<links.length;e++){
+      const i=links[e][0],j=links[e][1],w=links[e][2];
+      const ax=pos[i].x-pos[j].x,ay=pos[i].y-pos[j].y,d=Math.hypot(ax,ay)||0.01;
+      const f=d*d/k*w,ux=ax/d,uy=ay/d;
+      dx[i]-=ux*f;dy[i]-=uy*f;dx[j]+=ux*f;dy[j]+=uy*f;
+    }
+    for(let i=0;i<n;i++){
+      dx[i]-=pos[i].x*3.0; dy[i]-=pos[i].y*3.0;
+      const d=Math.hypot(dx[i],dy[i])||0.01,lim=Math.min(d,t);
+      pos[i].x+=dx[i]/d*lim;pos[i].y+=dy[i]/d*lim;
+    }
+    t=Math.max(t*0.97,0.3);
+  }
+  for(let c=0;c<40;c++){
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+      const ax=pos[j].x-pos[i].x,ay=pos[j].y-pos[i].y,d=Math.hypot(ax,ay)||0.01;
+      if(d<150){const f=(150-d)/2,ux=ax/d,uy=ay/d;
+        pos[i].x-=ux*f;pos[i].y-=uy*f;pos[j].x+=ux*f;pos[j].y+=uy*f;}
+    }
+  }
+  const out=new Map();mods.forEach((m,i)=>out.set(m,pos[i]));
+  return out;
+}
+
+// 模块卡片尺寸(与绘制保持一致)
+function cardW(i){const m=FILES[i],lab=m.label||m.short;return Math.max(108,Math.min(156,46+lab.length*6.6));}
+const CARD_H=56;
+// 从卡片中心沿 (ux,uy) 方向求与矩形边界的交点
+function edgeHit(cx,cy,hw,hh,ux,uy){
+  const tx=ux!==0?hw/Math.abs(ux):1e9, ty=uy!==0?hh/Math.abs(uy):1e9;
+  const t=Math.min(tx,ty);
+  return [cx+ux*t,cy+uy*t];
+}
+function drawPano(refit){
+  const svg=document.getElementById('pano');if(!svg)return;
+  if(!panoPos)panoPos=layoutPano();
+  const pos=panoPos;
+  let links=matLinks(panoMode);
+  const linkSet=panoMode==='call'?CALL_MAP:INC_MAP;
+  const EDGE_MAX=400;const edgeCapped=links.length>EDGE_MAX;
+  if(edgeCapped)links=links.slice().sort((a,b)=>b[2]-a[2]).slice(0,EDGE_MAX);
+  let g='';
+  const dotBase=panoMode==='call'?'#4daafc':'#c586c0';
+  let dotCount=0;const DOT_MAX=200;
+  for(const l of links){
+    const i=l[0],j=l[1],w=l[2];
+    if(!w||i===j||!pos.has(i)||!pos.has(j))continue;
+    const mutual=(linkSet[j+'_'+i]||0)>0;   // 双向调用
+    if(mutual&&i>j)continue;                // 双向只画一条(洋红)
+    const op=panoSel<0?0.28:(i===panoSel||j===panoSel?0.85:0.05);
+    const wd=Math.min(6,0.8+Math.log2(w+1)*(panoMode==='call'?1:0.8));
+    const lineCol=mutual?'#e06c9f':'#6a6a6a';   // 洋红=双向依赖(不与"红=问题"冲突)
+    const dotCol=mutual?'#e06c9f':dotBase;
+    // 连线接到模块卡片边缘
+    const x1=pos.get(i).x,y1=pos.get(i).y,x2=pos.get(j).x,y2=pos.get(j).y;
+    const len=Math.hypot(x2-x1,y2-y1)||1,ux=(x2-x1)/len,uy=(y2-y1)/len;
+    const p1=edgeHit(x1,y1,cardW(i)/2,CARD_H/2,ux,uy);
+    const p2=edgeHit(x2,y2,cardW(j)/2,CARD_H/2,-ux,-uy);
+    const sx=p1[0],sy=p1[1],ex=p2[0],ey=p2[1];
+    g+=`<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}"`+
+       ` stroke="${lineCol}" stroke-width="${wd.toFixed(1)}" opacity="${op}"/>`;
+    // 仅在选中模块时, 于它与邻居之间跑光点; 双向则两个光点反向流动
+    const related=(i===panoSel||j===panoSel);
+    if(panoSel>=0&&related&&dotCount<DOT_MAX){
+      const dur=(0.9+Math.min(2.2,len/420)).toFixed(2);
+      const begin=(-((dotCount%10)*0.22)).toFixed(2);
+      g+=`<circle r="3.2" fill="${dotCol}" opacity="0.95">`+
+         `<animateMotion dur="${dur}s" begin="${begin}s" repeatCount="indefinite" `+
+         `path="M${sx.toFixed(1)},${sy.toFixed(1)} L${ex.toFixed(1)},${ey.toFixed(1)}"/></circle>`;
+      dotCount++;
+      if(mutual&&dotCount<DOT_MAX){
+        g+=`<circle r="3.2" fill="${dotCol}" opacity="0.95">`+
+           `<animateMotion dur="${dur}s" begin="${begin}s" repeatCount="indefinite" `+
+           `path="M${ex.toFixed(1)},${ey.toFixed(1)} L${sx.toFixed(1)},${sy.toFixed(1)}"/></circle>`;
+        dotCount++;
+      }
+    }
+  }
+  panoModsList().forEach(i=>{
+    const m=FILES[i],lab=m.label||m.short,p=pos.get(i);
+    const x=p.x,y=p.y,w=cardW(i),hgt=CARD_H,sel=i===panoSel;
+    const col=m.instability>0.66?'#f85149':m.instability>0.33?'#cca700':'#4ec9b0';
+    const dim=panoSel>=0&&!sel&&!((linkSet[panoSel+'_'+i]||0)||(linkSet[i+'_'+panoSel]||0))?0.35:1;
+    g+=`<g class="pnode" data-m="${i}" transform="translate(${x},${y})" opacity="${dim}">
+      <title>${esc(m.path)}&#10;函数 ${m.funcs} · NLOC ${m.nloc} · 接口 ${m.iface}(对外${m.iface_ext||0}/泄漏${m.iface_int||0})&#10;平均CCN ${m.avg_ccn} · 最高 ${m.max_ccn}&#10;Ca ${m.ca} / Ce ${m.ce} · I ${m.instability}${m.in_cycle?'&#10;⚠ 位于调用环':''}</title>
+      <rect x="${-w/2}" y="${-hgt/2}" width="${w}" height="${hgt}" rx="9" fill="${sel?'#04395e':'#252526'}" stroke="${m.in_cycle?'#cca700':col}" stroke-width="${sel?2.4:1.4}"${m.in_cycle?' stroke-dasharray="5 3"':''}/>
+      <text x="0" y="-11" text-anchor="middle" font-size="${lab.length>14?9.5:11.5}" fill="#cccccc">${esc(lab)}</text>
+      <text x="0" y="5" text-anchor="middle" font-size="9.5" fill="#9d9d9d">${m.funcs}函数 · 外${m.iface_ext||0}/泄漏${m.iface_int||0}</text>
+      <text x="0" y="18" text-anchor="middle" font-size="9.5" fill="#9d9d9d">Ca ${m.ca} Ce ${m.ce} · I ${m.instability}</text></g>`;
+  });
+  if(panoSel>=0&&panoExpand&&pos.has(panoSel)){
+    const m=FILES[panoSel];
+    const ids=m.iface_ids.slice().sort((a,b)=>(F[b][17]+F[b][18])-(F[a][17]+F[a][18])).slice(0,16);
+    const cx=pos.get(panoSel).x,cy=pos.get(panoSel).y,R=120;
+    ids.forEach((fid,k)=>{
+      const ang=2*Math.PI*k/ids.length,sx=cx+R*Math.cos(ang),sy=cy+R*Math.sin(ang);
+      adj[fid].slice(0,8).forEach(b=>{const fm=fFile(b);if(fm===panoSel||!pos.has(fm))return;
+        const sp=isSpawn(fid,b);
+        g+=`<line x1="${sx}" y1="${sy}" x2="${pos.get(fm).x}" y2="${pos.get(fm).y}" stroke="${sp?'#cca700':'#4daafc'}" stroke-width="1" opacity="0.6"${sp?' stroke-dasharray="4 3"':''}/>`;});
+      radj[fid].slice(0,8).forEach(a=>{const fm=fFile(a);if(fm===panoSel||!pos.has(fm))return;
+        const sp=isSpawn(a,fid);
+        g+=`<line x1="${pos.get(fm).x}" y1="${pos.get(fm).y}" x2="${sx}" y2="${sy}" stroke="${sp?'#cca700':'#c586c0'}" stroke-width="1" opacity="0.6"${sp?' stroke-dasharray="4 3"':''}/>`;});
+    });
+    ids.forEach((fid,k)=>{
+      const ang=2*Math.PI*k/ids.length,sx=cx+R*Math.cos(ang),sy=cy+R*Math.sin(ang);
+      g+=`<g class="piface" data-fn="${fid}" transform="translate(${sx},${sy})" style="cursor:pointer">
+        <title>${esc(fName(fid))} · CCN ${fCcn(fid)} · 跨模块 入${F[fid][17]}/出${F[fid][18]}</title>
+        <circle r="7" fill="${fileColor(panoSel)}" stroke="#1f1f1f"/>
+        <text x="0" y="-11" text-anchor="middle" font-size="9" fill="#cccccc">${esc(fName(fid))}</text></g>`;
+    });
+  }
+  svg.innerHTML=`<g id="panoG">${g}</g>`;
+  svg.querySelectorAll('.pnode').forEach(n=>n.onclick=()=>selectP(+n.dataset.m));
+  svg.querySelectorAll('.piface').forEach(n=>n.onclick=()=>openInGraph(+n.dataset.fn));
+  // 仅在需要取景时重算 viewBox; 点选/展开接口保持当前缩放平移不重置
+  if(refit||!svg.getAttribute('viewBox')){
+    let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+    pos.forEach(p=>{minX=Math.min(minX,p.x-70);maxX=Math.max(maxX,p.x+70);
+      minY=Math.min(minY,p.y-42);maxY=Math.max(maxY,p.y+42);});
+    if(panoSel>=0&&panoExpand&&pos.has(panoSel)){const p=pos.get(panoSel),R=160;
+      minX=Math.min(minX,p.x-R);maxX=Math.max(maxX,p.x+R);
+      minY=Math.min(minY,p.y-R);maxY=Math.max(maxY,p.y+R);}
+    let bx=minX-24,by=minY-24,bw=Math.max(1,maxX-minX+48),bh=Math.max(1,maxY-minY+48);
+    const cw=svg.clientWidth||1000,ch=svg.clientHeight||700,ar=cw/ch;
+    if(bw/bh>ar){const nh=bw/ar;by-=(nh-bh)/2;bh=nh;}else{const nw=bh*ar;bx-=(nw-bw)/2;bw=nw;}
+    svg.setAttribute('viewBox',`${bx.toFixed(1)} ${by.toFixed(1)} ${bw.toFixed(1)} ${bh.toFixed(1)}`);
+    svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  }
+  enableViewZoom(svg);
+  const info=document.getElementById('pInfo');
+  if(info)info.textContent=`${M} 个模块${PANO_MODS&&PANO_MODS.length<M?'（显示前 '+PANO_MODS.length+' 个高耦合模块）':''} · 连线=模块间${panoMode==='call'?'调用':'include'}依赖 · 卡片边框绿稳/红不稳 · 选中模块后显示流动光点 · 洋红连线=双向依赖${edgeCapped?' · 连线过多仅显示前 '+EDGE_MAX+' 条(按强度)':''}`;
+  refreshPanoDetail();
+}
+function panoDetailHTML(){
+  if(panoSel<0)return '<div class="small">点击左侧模块查看详情；勾选"展开接口函数"可看该模块的接口调用关系。</div>';
+  const m=FILES[panoSel];
+  const modFns=F.filter(f=>f[1]===panoSel);
+  // 对外接口: 被其他模块调用; 内部接口(泄漏符号): 非 static 却只在本模块内被调用
+  const ext=modFns.filter(f=>f[21]>0).sort((a,b)=>b[21]-a[21]);
+  const inn=modFns.filter(f=>f[24]===0&&f[21]===0&&f[20]>0).sort((a,b)=>b[20]-a[20]);
+  const unused=modFns.filter(f=>f[24]===0&&f[21]===0&&f[20]===0).sort((a,b)=>b[4]-a[4]);
+  const tbl=arr=>`<div class="scroll" style="max-height:220px"><table>
+    <thead><tr><th>函数</th><th class="num">CCN</th><th class="num">入(内/外)</th><th class="num">出(内/外)</th></tr></thead><tbody>
+    ${arr.slice(0,40).map(f=>`<tr data-fn="${f[0]}" style="cursor:pointer"><td>${esc(f[2])}</td>
+      <td class="num" style="color:${ccnColor(f[4])}">${f[4]}</td>
+      <td class="num">${f[20]}/${f[21]}</td>
+      <td class="num">${f[22]}/${f[23]}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  return `<h2>${esc(m.label)}</h2>
+    <div class="small" style="margin-bottom:8px">${esc(m.path)}</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:6px">
+      ${kv('函数',m.funcs)}${kv('接口',m.iface)}${kv('NLOC',m.nloc)}${kv('平均CCN',m.avg_ccn)}
+      ${kv('最高CCN',m.max_ccn)}${kv('不稳定性 I',m.instability)}
+      ${kv('Ca 被依赖',m.ca)}${kv('Ce 依赖',m.ce)}
+      ${kv('对外接口',`<b style="color:var(--acc)">${m.iface_ext||0}</b>`)}${kv('内部接口(泄漏)',m.iface_int||0)}${kv('未接入(工程内无调用)',unused.length)}
+    </div>${m.in_cycle?'<div style="margin-top:6px"><span class="tag cyc">位于调用环</span></div>':''}
+    <h2 style="margin-top:12px">对外接口 ${ext.length} 个 <span class="sub">被其他模块调用</span></h2>
+    ${tbl(ext)}
+    <h2 style="margin-top:12px">内部接口 ${inn.length} 个 <span class="sub">非 static 却只在本模块内用（外部链接泄漏）</span></h2>
+    ${tbl(inn)}
+    <h2 style="margin-top:12px">未接入接口 ${unused.length} 个 <span class="sub">非 static 但在本工程内没有任何调用：可能是对外入口/回调，或死代码</span></h2>
+    ${tbl(unused)}`;
+}
+function refreshPanoDetail(){
+  const d=document.getElementById('pDetail');if(!d)return;
+  d.innerHTML=panoDetailHTML();
+  d.querySelectorAll('tr[data-fn]').forEach(tr=>tr.onclick=()=>openInGraph(+tr.dataset.fn));
+}
+
+/* ---- 模块表 ---- */
+const moduleCols=[
+  ['short','模块','文件(模块)', ''],
+  ['funcs','函数','模块内函数数', 'num'],
+  ['nloc','NLOC','非空、非注释代码行', 'num'],
+  ['avg_ccn','平均CCN','模块内函数的平均圈复杂度', 'num'],
+  ['max_ccn','最高CCN','模块内最高的圈复杂度', 'num'],
+  ['ca','Ca','被其他模块调用(入)：越大越被依赖', 'num'],
+  ['ce','Ce','调用其他模块(出)：越大越依赖他人', 'num'],
+  ['instability','I','不稳定性 = Ce/(Ca+Ce)；0=最稳定(被依赖)，1=最不稳定(依赖他人)', 'num'],
+  ['comment_ratio','注释%','注释行占比', 'num']];
+let msort='avg_ccn',mdir=-1;
+function moduleTable(withBar){
+  const arr=[...FILES].sort((a,b)=>{const x=a[msort],y=b[msort];
+    if(typeof x==='string')return (x>y?1:x<y?-1:0)*mdir;return (x-y)*mdir;});
+  return '<table><thead><tr>'+moduleCols.map(c=>
+    `<th data-k="${c[0]}"${c[3]?' class="'+c[3]+'"':''} title="${c[2]}">${c[1]}${msort===c[0]?(mdir<0?' \u25be':' \u25b4'):''}</th>`).join('')+
+    '<th title="环=位于调用环；复杂=最高CCN>30">状态</th></tr></thead><tbody>'+
+    arr.map(m=>`<tr><td>${esc(m.label)}</td><td class="num">${m.funcs}</td><td class="num">${fmt(m.nloc)}</td>
+      <td class="num" style="color:${ccnColor(m.avg_ccn*3)}">${m.avg_ccn}</td>
+      <td class="num" style="color:${ccnColor(m.max_ccn)}">${m.max_ccn}</td>
+      <td class="num">${m.ca}</td><td class="num">${m.ce}</td><td class="num">${m.comment_ratio!=null?m.comment_ratio:''}</td>
+      <td class="num">${withBar?`<span style="display:inline-flex;align-items:center;gap:8px;justify-content:flex-end;width:100%"><span class="bar" style="width:70px"><i style="width:${Math.min(100,100*m.instability)}%;background:var(--purple)"></i></span><span>${m.instability}</span></span>`:m.instability}</td>
+      <td>${m.in_cycle?'<span class="tag cyc">环</span>':''}${m.max_ccn>30?'<span class="tag hot">复杂</span>':''}</td></tr>`).join('')+
+    '</tbody></table>';
+}
+function mountModuleTable(container,withBar){
+  function draw(){
+    container.innerHTML=moduleTable(withBar);
+    container.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
+      if(msort===th.dataset.k)mdir=-mdir;else{msort=th.dataset.k;mdir=-1;}
+      draw();
+    });
+  }
+  draw();
+}
+
+/* ---- 启动 ---- */
+const RENDER={overview:renderOverview,matrix:renderMatrix,panorama:renderPanorama,
+  callgraph:renderCallgraph,complexity:renderComplexity,depth:renderDepth,health:renderHealth,cleanliness:renderCleanliness};
+(function(){
+  const st=loadState();
+  if(st.ccnThresh)ccnThresh=st.ccnThresh;
+  if(st.cgHops)cgHops=st.cgHops;
+  if(typeof st.keepPos==='boolean')keepPos=st.keepPos;
+  if(typeof st.showCyc==='boolean')showCyc=st.showCyc;
+  if(typeof st.showSpawn==='boolean')showSpawn=st.showSpawn;
+  if(typeof st.showHeur==='boolean')showHeur=st.showHeur;
+  if(st.matrixMode)matrixMode=st.matrixMode;
+  if(st.matrixOrderMode)matrixOrderMode=st.matrixOrderMode;
+  if(Array.isArray(st.weights)&&st.weights.length===6)hWeights=st.weights;
+  const th=document.getElementById('thresh');if(th)th.value=ccnThresh;
+  const hb=document.getElementById('helpBtn'),hm=document.getElementById('help');
+  if(hb&&hm)hb.onclick=()=>{hm.hidden=!hm.hidden;};
+  if(hm)hm.onclick=e=>{if(e.target===hm)hm.hidden=true;};
+  if(th)th.oninput=()=>{const v=+th.value;if(v>0){ccnThresh=v;saveState();refreshActive();}};
+  const tabs=['overview','matrix','panorama','callgraph','complexity','depth','health','cleanliness'];
+  document.addEventListener('keydown',e=>{
+    if(e.target&&/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+    if(e.key>='1'&&e.key<='8'){const b=document.querySelector('nav.tabs button[data-tab="'+tabs[+e.key-1]+'"]');if(b)b.click();}
+    else if(e.key==='/'){const i=document.querySelector('section.tab.active input');if(i){e.preventDefault();i.focus();}}
+    else if(e.key==='Escape'){if(hm)hm.hidden=true;}
+  });
+  const start=(st.tab&&tabs.indexOf(st.tab)>=0)?st.tab:'overview';
+  document.querySelector('nav.tabs button[data-tab="'+start+'"]').click();
+})();
+</script>
+</body>
+</html>

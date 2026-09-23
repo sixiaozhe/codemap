@@ -1,0 +1,68 @@
+#!/bin/sh
+# codemap - 为 C/C++ 工程生成可交互代码地图
+# 指标: lizard  ·  符号调用关系: cscope  ·  输出: 单个自包含 HTML
+#
+# 用法: codemap [-o 输出.html] <项目目录> [排除模式(逗号分隔)]
+#   codemap ./src
+#   codemap -o ./map.html ./src "tests/,third_party/"
+set -e
+
+SELF=$(readlink -f "$0" 2>/dev/null || echo "$0")
+BINDIR=$(cd "$(dirname "$SELF")" && pwd)
+PREFIX=$(dirname "$BINDIR")
+LIBDIR="$PREFIX/share/codemap"
+LIZARD="$BINDIR/lizard.pyz"
+CSCOPE="$BINDIR/cscope"
+
+usage() {
+    echo "用法: codemap [-o 输出.html] <项目目录> [排除模式(逗号分隔)]"
+    echo "      codemap query <查询> [--data codemap.ai.json]"
+    echo "      codemap mcp [--data codemap.ai.json]"
+    echo "例:   codemap ./src"
+    echo "      codemap query callers:luaV_execute"
+    exit 2
+}
+
+# 子命令
+case "${1:-}" in
+    query) shift; exec python3 "$LIBDIR/query.py" "$@" ;;
+    mcp)   shift; exec python3 "$LIBDIR/mcp_server.py" "$@" ;;
+esac
+
+OUT=./codemap.html
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -o|--output) [ $# -ge 2 ] || usage; OUT="$2"; shift 2 ;;
+        -h|--help) usage ;;
+        *) break ;;
+    esac
+done
+[ $# -ge 1 ] || usage
+PROJ="$1"
+EXCL="${2:-}"
+
+[ -f "$PROJ" ] || [ -d "$PROJ" ] || { echo "错误: 找不到路径 $PROJ" >&2; exit 1; }
+# 转成绝对路径, 保证 lizard / cscope / 文件发现 三者路径一致
+PROJ=$(cd "$(dirname "$PROJ")" && pwd)/$(basename "$PROJ")
+[ -x "$CSCOPE" ] || { echo "错误: 缺少 $CSCOPE" >&2; exit 1; }
+[ -f "$LIZARD" ] || { echo "错误: 缺少 $LIZARD" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "错误: 需要 python3 (>=3.6)" >&2; exit 1; }
+[ -f "$LIBDIR/analyze.py" ] || { echo "错误: 缺少 $LIBDIR/analyze.py" >&2; exit 1; }
+
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/codemap.XXXXXX")
+trap 'rm -rf "$WORK"' EXIT
+
+echo "[1/3] lizard 抽取圈复杂度 / NLOC / 参数 / token ..."
+python3 "$LIZARD" --csv -l cpp -Ehalstead -ENS "$PROJ" > "$WORK/lizard.csv"
+python3 "$LIZARD" -Eduplicate -l cpp "$PROJ" > "$WORK/dup.txt" 2>/dev/null || true
+
+echo "[2/3] cscope 抽取调用关系, 计算依赖矩阵 / 调用深度 / 环 / 健康度 ..."
+python3 "$LIBDIR/analyze.py" "$PROJ" "$WORK/lizard.csv" "$CSCOPE" "$WORK/data.json" "$EXCL" "$WORK/dup.txt"
+
+echo "[3/3] 生成自包含 HTML + AI 摘要 ..."
+python3 "$LIBDIR/build_html.py" "$LIBDIR/template.html" "$WORK/data.json" "$OUT"
+python3 "$LIBDIR/ai_export.py" "$WORK/data.json" "${OUT%.html}"
+
+echo "完成 -> $OUT"
+echo "AI 摘要 -> ${OUT%.html}.ai.md / ${OUT%.html}.ai.json"
+echo "按需查询 -> codemap query callers:<函数>   (在输出目录下)" 
