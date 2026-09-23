@@ -173,18 +173,6 @@ codemap/
 └── uninstall.sh
 ```
 
-## 📦 打包与发布
-
-```bash
-sh scripts/package.sh 7.1.0          # -> dist/codemap-toolkit-7.1.0.tar.gz
-```
-
-打 `v*` 标签会触发 GitHub Actions（`.github/workflows/release.yml`）自动打包并创建 Release：
-
-```bash
-git tag v7.1.0 && git push origin v7.1.0
-```
-
 ## ⚠️ 已知限制
 
 - 调用关系为**启发式**：不含宏展开、函数指针、虚函数动态分派；线程/回调可识别。用于导航很有效，下结论前请结合源码复核。

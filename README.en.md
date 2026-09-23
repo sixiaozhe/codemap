@@ -175,18 +175,6 @@ codemap/
 └── uninstall.sh
 ```
 
-## 📦 Packaging & release
-
-```bash
-sh scripts/package.sh 7.1.0          # -> dist/codemap-toolkit-7.1.0.tar.gz
-```
-
-Pushing a `v*` tag triggers GitHub Actions to build and publish a Release:
-
-```bash
-git tag v7.1.0 && git push origin v7.1.0
-```
-
 ## ⚠️ Limitations
 
 - Call relations are **heuristic**: no macro expansion, function pointers, or virtual dispatch; thread/callback calls are recognized. Great for navigation — verify against source before drawing conclusions.
