@@ -17,6 +17,8 @@
 ![license](https://img.shields.io/badge/license-MIT-4daafc)
 [![release](https://github.com/sixiaozhe/codemap/actions/workflows/release.yml/badge.svg)](https://github.com/sixiaozhe/codemap/actions/workflows/release.yml)
 
+[**中文**](README.md) · [English](README.en.md)
+
 </div>
 
 ---
@@ -31,6 +33,18 @@
 - **为大工程准备**：稀疏依赖矩阵、自动降级、并行解析、结果截断显式提示。
 
 ## 🗺️ 功能一览
+
+### 总览（标注）
+
+![总览（标注）](docs/overview-annotated.png)
+
+① KPI 三组（规模 / 复杂度 / 耦合）　② 健康度评分与扣分拆解　③ CCN 阈值（全局联动配色/热点/评分）　④ 最复杂函数　⑤ 左侧图标导航（可折叠）
+
+### 依赖矩阵（标注）
+
+![依赖矩阵（标注）](docs/matrix-annotated.png)
+
+① 模式 / 排序 / 导出 / 统计　② 依赖强度色阶　③ 上三角红框 = 反向调用（循环依赖）　④ 悬停单元格 → 整行整列高亮
 
 | 页签 | 内容 |
 |---|---|
@@ -64,6 +78,11 @@
 ![整洁度](docs/cleanliness.png)
 
 > 以上动图均由**真实工具输出**（Lua 5.4 工程）录制，非示意图。
+
+## 📂 示例
+
+`examples/` 内含对 **Lua 5.4** 生成的示例地图（自包含 HTML），**不含被分析工程的源码**；复现步骤见
+[`examples/README.md`](examples/README.md)。
 
 ## 🚀 快速开始
 
